@@ -1,0 +1,18 @@
+# Kaggle datasets folder
+/data
+
+# pycache
+*.pyc
+/__pycache__
+
+# vscode
+*.vscode
+
+# pytest
+.pytest_cache
+
+.DS_Store
+
+# submission files
+*.csv
+*.pkl
