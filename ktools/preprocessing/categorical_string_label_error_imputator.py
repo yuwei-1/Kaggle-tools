@@ -18,7 +18,7 @@ class CategoricalLabelErrorImputator:
         
         for col_name in col_names_to_impute:
             relabeller = {}
-            dataframe[col_name] = dataframe[col_name].str.lower()
+            dataframe.loc[:, col_name] = dataframe[col_name].str.lower()
             val_counts = dataframe[col_name].value_counts(sort=True)
             unique_values = val_counts.index
             occurrences = val_counts.values
@@ -35,6 +35,6 @@ class CategoricalLabelErrorImputator:
                     continue
             if self._verbose:
                 print("(original : new category)", relabeller)
-            dataframe[col_name] = dataframe[col_name].map(lambda x: relabeller.get(x, x))
+            dataframe.loc[:, col_name] = dataframe[col_name].map(lambda x: relabeller.get(x, x))
 
         return dataframe

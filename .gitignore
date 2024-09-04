@@ -16,3 +16,11 @@
 # submission files
 *.csv
 *.pkl
+
+# saved models
+models
+
+# dist files
+/ktools.egg-info/
+/build
+/dist

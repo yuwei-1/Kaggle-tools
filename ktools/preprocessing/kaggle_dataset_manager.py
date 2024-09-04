@@ -40,4 +40,4 @@ class KaggleDatasetManager:
 
     @staticmethod
     def _dataset_size_guard(*sizes):
-        assert np.allclose(np.sum([*sizes]), 1, atol=0.1), "dataset sizes must add to one"
+        assert np.allclose(np.sum([*sizes]), 1, atol=0.01), "dataset sizes must add to one"

@@ -11,3 +11,5 @@ scipy
 lightgbm
 pytest
 kaggle
+autogluon.tabular
+parameterized
