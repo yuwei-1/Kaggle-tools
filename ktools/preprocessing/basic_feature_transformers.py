@@ -1,7 +1,7 @@
 import numpy as np
 from copy import deepcopy
 import pandas as pd
-from ktools.preprocessing.interfaces.i_feature_transformer import IFeatureTransformer
+from ktools.preprocessing.i_feature_transformer import IFeatureTransformer
 from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings
 
 

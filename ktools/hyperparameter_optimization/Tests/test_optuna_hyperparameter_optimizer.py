@@ -5,7 +5,7 @@ import optuna
 from sklearn.metrics import r2_score
 from sklearn.linear_model import Lasso
 from sklearn.model_selection import KFold
-from ktools.hyperparameter_optimization.interfaces.i_model_param_grid import IModelParamGrid
+from ktools.hyperparameter_optimization.i_model_param_grid import IModelParamGrid
 from ktools.hyperparameter_optimization.optuna_hyperparameter_optimizer import OptunaHyperparameterOptimizer
 
 

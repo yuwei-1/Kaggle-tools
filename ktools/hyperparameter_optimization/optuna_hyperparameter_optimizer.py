@@ -4,10 +4,10 @@ import pandas as pd
 import numpy as np
 from optuna.samplers import TPESampler
 from typing import *
-from ktools.fitting.interfaces.i_sklearn_model import ISklearnModel
-from ktools.hyperparameter_optimization.interfaces.i_hyperparameter_optimizer import IHyperparameterOptimizer
-from ktools.hyperparameter_optimization.interfaces.i_model_param_grid import IModelParamGrid
-from ktools.hyperparameter_optimization.interfaces.i_sklearn_kfold_object import ISklearnKFoldObject
+from ktools.fitting.i_sklearn_model import ISklearnModel
+from ktools.hyperparameter_optimization.i_hyperparameter_optimizer import IHyperparameterOptimizer
+from ktools.hyperparameter_optimization.i_model_param_grid import IModelParamGrid
+from ktools.hyperparameter_optimization.i_sklearn_kfold_object import ISklearnKFoldObject
 
 
 class OptunaHyperparameterOptimizer(IHyperparameterOptimizer):

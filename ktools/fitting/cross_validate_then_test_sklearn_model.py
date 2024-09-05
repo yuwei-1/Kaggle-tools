@@ -2,7 +2,7 @@ from typing import Dict
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold
-from ktools.fitting.interfaces.i_sklearn_model import ISklearnModel
+from ktools.fitting.i_sklearn_model import ISklearnModel
 
 
 class CrossValidateTestSklearnModel:

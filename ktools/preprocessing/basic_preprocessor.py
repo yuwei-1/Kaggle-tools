@@ -1,6 +1,6 @@
 import pandas as pd
 from typing import Tuple
-from ktools.preprocessing.interfaces.i_preprocessing_utility import IPreprocessingUtility
+from ktools.preprocessing.i_preprocessing_utility import IPreprocessingUtility
 from ktools.preprocessing.categorical_string_label_error_imputator import CategoricalLabelErrorImputator
 from ktools.preprocessing.categorical_features_embedder import SortMainCategories
 from ktools.preprocessing.kaggle_dataset_manager import KaggleDatasetManager
