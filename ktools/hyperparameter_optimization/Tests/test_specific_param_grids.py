@@ -2,8 +2,11 @@ from functools import reduce
 import unittest
 from parameterized import parameterized
 from lightgbm import LGBMRegressor
+from xgboost import XGBRegressor
 from sklearn.model_selection import KFold
 from sklearn.metrics import root_mean_squared_error
+from ktools.fitting.lgbm_model import LGBMModel
+from ktools.fitting.xgb_model import XGBoostModel
 from ktools.hyperparameter_optimization.model_param_grids import *
 from ktools.hyperparameter_optimization.optuna_hyperparameter_optimizer import OptunaHyperparameterOptimizer
 from ktools.preprocessing.basic_feature_transformers import *
@@ -37,7 +40,7 @@ class TestSpecificParamGrids(unittest.TestCase):
         (LGBMRFParamGrid())
     ])
     def test_lgbm(self, lgbm_param_getter):
-        model = LGBMRegressor
+        model = LGBMModel
 
         optimizer = OptunaHyperparameterOptimizer(self.train_df.drop(columns=["price", "log_price"]),
                                                   self.train_df['log_price'],
@@ -45,5 +48,25 @@ class TestSpecificParamGrids(unittest.TestCase):
                                                   lgbm_param_getter,
                                                   self.kf,
                                                   lambda y, yh : root_mean_squared_error(np.exp(y)-1, np.exp(yh)-1),
+                                                  direction='minimize',
+                                                  n_trials=2)
+        best_params = optimizer.optimize()
+
+
+    @parameterized.expand([
+        (XGBoostGBTree()),
+        (XGBoostGBTreeLinear()),
+        (XGBoostDART())
+    ])
+    def test_xgb(self, xgb_param_getter):
+        model = XGBoostModel
+
+        optimizer = OptunaHyperparameterOptimizer(self.train_df.drop(columns=["price", "log_price"]),
+                                                  self.train_df['log_price'],
+                                                  model,
+                                                  xgb_param_getter,
+                                                  self.kf,
+                                                  lambda y, yh : root_mean_squared_error(np.exp(y)-1, np.exp(yh)-1),
+                                                  direction='minimize',
                                                   n_trials=2)
         best_params = optimizer.optimize()

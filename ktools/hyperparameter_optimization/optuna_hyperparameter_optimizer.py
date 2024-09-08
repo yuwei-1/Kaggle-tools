@@ -41,7 +41,8 @@ class OptunaHyperparameterOptimizer(IHyperparameterOptimizer):
 
     def optimize(self, 
                  inital_parameters : Dict[str, float] = None,
-                 initial_distribution : Dict[str, Any] = None
+                 initial_distribution : Dict[str, Any] = None,
+                 timeout : int = 3600
                  ):
         if self._verbose:
             print("Starting Optuna trials...........................")
@@ -57,7 +58,7 @@ class OptunaHyperparameterOptimizer(IHyperparameterOptimizer):
                             distributions=initial_distribution,
                             value=self._objective(fixed_trial)
             ))
-        study.optimize(self._objective, n_trials=self._n_trials)
+        study.optimize(self._objective, n_trials=self._n_trials, timeout=timeout)
         # joblib.dump(study, "/kaggle/working/study.pkl")
         optimal_params = study.best_params
         return optimal_params

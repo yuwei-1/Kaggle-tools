@@ -1,6 +1,7 @@
 from typing import Dict
 import numpy as np
 import pandas as pd
+from copy import deepcopy
 from sklearn.model_selection import StratifiedKFold
 from ktools.fitting.i_sklearn_model import ISklearnModel
 
@@ -18,11 +19,12 @@ class CrossValidateTestSklearnModel:
         self._kf = kfold_object
         self._num_metrics = len(self._metric_names)
         self._num_splits = num_splits
+        self._model_list = []
 
     def _fit_then_predict(self, X, y, X_test):
-        self.model.fit(X, y)
-        y_pred = self.model.predict(X_test)
-        return y_pred
+        model = deepcopy(self.model).fit(X, y)
+        y_pred = model.predict(X_test)
+        return y_pred, model
 
     def evaluate(self,
                  X_train, y_train,
@@ -36,9 +38,10 @@ class CrossValidateTestSklearnModel:
                 X_train_fold, X_val_fold = X_train.iloc[train_index], X_train.iloc[val_index]
                 y_train_fold, y_val_fold = y_train.iloc[train_index], y_train.iloc[val_index]
 
-                y_pred = self._fit_then_predict(X_train_fold,
-                                                y_train_fold,
-                                                X_val_fold)
+                y_pred, model = self._fit_then_predict(X_train_fold,
+                                                       y_train_fold,
+                                                       X_val_fold)
+                self._model_list += [model]
 
                 for j, metric in enumerate(self._metric_names):
                     score = self._evaluation_metrics[metric](np.array(y_val_fold), np.array(y_pred))
@@ -47,9 +50,9 @@ class CrossValidateTestSklearnModel:
             cv_scores = pd.DataFrame(columns=self._metric_names, data=cv_results)
             cv_scores.describe()
 
-        y_pred = self._fit_then_predict(X_train,
-                                        y_train,
-                                        X_test)
+        y_pred, self.model = self._fit_then_predict(X_train,
+                                                     y_train,
+                                                     X_test)
         test_scores = {}
         for j, metric in enumerate(self._metric_names):
             score = self._evaluation_metrics[metric](np.array(y_test), np.array(y_pred))
@@ -57,4 +60,4 @@ class CrossValidateTestSklearnModel:
             print(f"Final Model {metric}: {score:.6f}")
             print(f"{self._num_splits}-fold cross validation {metric}: ", cv_results[:,j].mean())
         
-        return self.model, cv_scores, test_scores
+        return self._model_list, cv_scores, test_scores
