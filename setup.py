@@ -4,7 +4,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='ktools',  # Replace with your project's name
-    version='0.0.3',  # Initial release version
+    version='0.0.4',  # Initial release version
     author='Yuwei Zhu',  # Replace with your name or your organization's name
     author_email='yuweizhu29@gmail.com',  # Replace with your email
     description='A repository of tools to use for kaggle competitions',  # Replace with a short description of your project

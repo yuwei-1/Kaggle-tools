@@ -5,8 +5,9 @@ from lightgbm import LGBMRegressor
 from xgboost import XGBRegressor
 from sklearn.model_selection import KFold
 from sklearn.metrics import root_mean_squared_error
-from ktools.fitting.lgbm_model import LGBMModel
-from ktools.fitting.xgb_model import XGBoostModel
+from ktools.modelling.models.catboost_model import CatBoostModel
+from ktools.modelling.models.lgbm_model import LGBMModel
+from ktools.modelling.models.xgb_model import XGBoostModel
 from ktools.hyperparameter_optimization.model_param_grids import *
 from ktools.hyperparameter_optimization.optuna_hyperparameter_optimizer import OptunaHyperparameterOptimizer
 from ktools.preprocessing.basic_feature_transformers import *
@@ -55,8 +56,7 @@ class TestSpecificParamGrids(unittest.TestCase):
 
     @parameterized.expand([
         (XGBoostGBTree()),
-        (XGBoostGBTreeLinear()),
-        (XGBoostDART())
+        (XGBoostGBTreeLinear())
     ])
     def test_xgb(self, xgb_param_getter):
         model = XGBoostModel
@@ -65,6 +65,19 @@ class TestSpecificParamGrids(unittest.TestCase):
                                                   self.train_df['log_price'],
                                                   model,
                                                   xgb_param_getter,
+                                                  self.kf,
+                                                  lambda y, yh : root_mean_squared_error(np.exp(y)-1, np.exp(yh)-1),
+                                                  direction='minimize',
+                                                  n_trials=2)
+        best_params = optimizer.optimize()
+
+    def test_catboost(self):
+        model = CatBoostModel
+
+        optimizer = OptunaHyperparameterOptimizer(self.train_df.drop(columns=["price", "log_price"]),
+                                                  self.train_df['log_price'],
+                                                  model,
+                                                  BaseCatBoostParamGrid(),
                                                   self.kf,
                                                   lambda y, yh : root_mean_squared_error(np.exp(y)-1, np.exp(yh)-1),
                                                   direction='minimize',

@@ -1,6 +1,6 @@
 pandas
 numpy==1.26
-scikit-learn
+scikit-learn==1.4
 ipykernel
 matplotlib
 seaborn
@@ -13,3 +13,8 @@ pytest
 kaggle
 autogluon.tabular
 parameterized
+scipy
+torch
+torchvision
+torchaudio
+hillclimbers
