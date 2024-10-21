@@ -26,7 +26,13 @@ class CrossValidationExecutor:
         self._num_classes = num_classes
         self._verbose = verbose
 
-    def run(self, X, y, local_transform_list=[lambda x : x], output_transform_list=[lambda x : x]) -> Tuple[Tuple[float], np.ndarray, List[Any]]:
+    def run(self, X, y, additional_data=None, local_transform_list=[lambda x : x], output_transform_list=[lambda x : x]) -> Tuple[Tuple[float], np.ndarray, List[Any]]:
+        if additional_data is not None:
+            X_add, y_add = additional_data
+            pd.testing.assert_index_equal(X.columns, X_add.columns, check_exact=True)
+            pd.testing.assert_series_equal(X.dtypes, X_add.dtypes, check_exact=True)
+            pd.testing.assert_index_equal(y.columns, y_add.columns, check_exact=True)
+            pd.testing.assert_series_equal(y.dtypes, y_add.dtypes, check_exact=True)
 
         cv_results = []
         model_list = []
@@ -36,6 +42,10 @@ class CrossValidationExecutor:
             
             X_train, X_test = X.iloc[train_index], X.iloc[val_index]
             y_train, y_test = y.iloc[train_index], y.iloc[val_index]
+
+            if additional_data is not None:
+                X_train = pd.concat([X_train, X_add], axis=0)
+                y_train = pd.concat([y_train, y_add], axis=0)
 
             X_train, y_train = reduce(lambda acc, func: func(acc), local_transform_list, (X_train, y_train))
             validation_set = None
@@ -50,7 +60,7 @@ class CrossValidationExecutor:
             oof_predictions[val_index] = y_pred
 
             if self._verbose > 1:
-                print(f"The CV results of the current fold is {cv_results}")
+                print(f"The CV results of the current fold is {cv_results[-1]}")
 
         oof_score = self._evaluation_metric(y, oof_predictions)
         mean_cv_score = np.mean(cv_results)

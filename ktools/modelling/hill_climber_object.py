@@ -18,8 +18,8 @@ class HillClimber:
                  plot_hill : bool = False
                  ) -> None:
         self._train_df = train_df
-        self.train_oof_pred = train_oof_pred
-        self.test_pred = test_pred
+        self.train_oof_pred = train_oof_pred.reset_index(drop=True)
+        self.test_pred = test_pred.reset_index(drop=True)
         self._target_col_name = target_col_name
         self._eval_metric = partial(eval_metric)
         self._objective = objective
@@ -30,8 +30,10 @@ class HillClimber:
 
     def naive_hill_climb(self):
 
-        best_test_pred = climb_hill(train=self._train_df,
-                                    oof_pred_df=self.train_oof_pred,
+        available_oofs = self.train_oof_pred.dropna()
+
+        best_test_pred = climb_hill(train=self._train_df.iloc[available_oofs.index],
+                                    oof_pred_df=available_oofs,
                                     test_pred_df=self.test_pred,
                                     target=self._target_col_name,
                                     objective=self._objective,
@@ -45,14 +47,16 @@ class HillClimber:
         if model_prediction_file_paths is not None:
             for model_name, (train_oof_file_path, test_pred_file_path) in model_prediction_file_paths.items():
 
-                train_oof = pd.read_csv(train_oof_file_path, index_col=0)
-                test_pred = pd.read_csv(test_pred_file_path, index_col=0)
+                train_oof = pd.read_csv(train_oof_file_path, index_col=0).reset_index(drop=True)
+                test_pred = pd.read_csv(test_pred_file_path, index_col=0).reset_index(drop=True)
 
-                train_col_name = train_oof.columns[0]
-                test_col_name = test_pred.columns[0]
+                train_col_name = train_oof.columns
+                test_col_name = test_pred.columns
 
-                train_oof.rename(columns={train_col_name : model_name}, inplace=True)
-                test_pred.rename(columns={test_col_name : model_name}, inplace=True)
+                test_pred.rename(columns={test_col_name[i] : train_col_name[i] for i in range(len(train_col_name))}, inplace=True)
+
+                train_oof.rename(columns={col_name : col_name + model_name for col_name in train_col_name}, inplace=True)
+                test_pred.rename(columns={col_name : col_name + model_name for col_name in train_col_name}, inplace=True)
 
                 self.train_oof_pred = pd.concat([self.train_oof_pred, train_oof], axis=1)
                 self.test_pred = pd.concat([self.test_pred, test_pred], axis=1)

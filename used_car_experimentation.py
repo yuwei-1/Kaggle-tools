@@ -714,6 +714,8 @@ if __name__ == "__main__":
                 settings.combined_df[new_feature_name] = settings.combined_df[feature_1].astype('str') + "_" + settings.combined_df[feature_2].astype('str')
 
             return settings
+        
+    
 
 
     og_training_col_names = settings.training_col_names

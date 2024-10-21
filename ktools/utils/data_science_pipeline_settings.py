@@ -8,6 +8,7 @@ class DataSciencePipelineSettings:
     train_csv_path : str
     test_csv_path : str
     target_col_name : str
+    original_csv_path : str = None
     sample_submission_path : str = None
     training_col_names : List[str] = None
     categorical_col_names : List[str] = None
@@ -21,8 +22,17 @@ class DataSciencePipelineSettings:
         self.combined_df = self._combine_datasets()
 
     def _load_csv_paths(self):
-        train_df = pd.read_csv(self.train_csv_path, index_col=0)
-        test_df = pd.read_csv(self.test_csv_path, index_col=0)
+        train_df = self._smart_drop_index(pd.read_csv(self.train_csv_path))
+        test_df = self._smart_drop_index(pd.read_csv(self.test_csv_path))
+        if self.original_csv_path is not None:
+            train_df = train_df.assign(source=0)
+            test_df = test_df.assign(source=0)
+            original_df = self._smart_drop_index(pd.read_csv(self.original_csv_path)).assign(source=1)
+
+            pd.testing.assert_index_equal(train_df.columns.sort_values(), original_df.columns.sort_values(), check_exact=True)
+            pd.testing.assert_series_equal(train_df.dtypes.sort_index(), original_df.dtypes.sort_index(), check_exact=True)
+            train_df = pd.concat([train_df, original_df], axis=0).reset_index(drop=True)
+
         return train_df, test_df
     
     def _get_column_info(self):
@@ -37,4 +47,11 @@ class DataSciencePipelineSettings:
     def update(self):
         self.train_df = self.combined_df.loc['train'].copy()
         self.test_df = self.combined_df.loc['test'].copy()
-        return self.train_df, self.test_df
+        return self.train_df, self.test_df        
+
+    @staticmethod
+    def _smart_drop_index(df):
+        differences = df.iloc[:, 0].diff().dropna()
+        if differences.nunique() == 1:
+            df = df.drop(columns=df.columns[0])
+        return df
