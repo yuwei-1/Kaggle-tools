@@ -16,7 +16,7 @@ from copy import deepcopy
 from typing import *
 from functools import reduce
 from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import TargetEncoder
+from sklearn.preprocessing import PolynomialFeatures, TargetEncoder
 from ktools.fitting.cross_validation_executor import CrossValidationExecutor
 from ktools.modelling.models.knn_model import KNNModel
 from ktools.preprocessing.basic_feature_transformers import ConvertObjectToCategorical, ConvertToLower, FillNullValues
@@ -193,7 +193,84 @@ if __name__ == "__main__":
             settings.combined_df[cat_cols] = settings.combined_df[cat_cols].astype('category')
             return settings
 
+    class PersonIncomeCategorical():
+        @staticmethod
+        def transform(settings : DataSciencePipelineSettings):
+            settings.categorical_col_names += ['person_income']
+            return settings
+        
+    class TrupologFeatures:
+        @staticmethod
+        def transform(original_settings : DataSciencePipelineSettings):
+            settings = deepcopy(original_settings) 
+            df = settings.combined_df
+            df['income_to_age'] = df['person_income'] / df['person_age']
+            df['loan_to_income'] = df['loan_amnt'] / df['person_income']
+            df['rate_to_loan'] = df['loan_int_rate'] / df['loan_amnt']
+            df['age_squared'] = df['person_age'] ** 2
+            df['log_income'] = np.log1p(df['person_income'])
+            df['age_credit_history_interaction'] = df['person_age'] * df['cb_person_cred_hist_length']
+            df['age_category'] = pd.cut(df['person_age'], bins=[0, 25, 35, 45, 55, 100], labels=['Very Young', 'Young', 'Middle', 'Senior', 'Elder'])
+            df['income_category'] = pd.qcut(df['person_income'], q=5, labels=['Very Low', 'Low', 'Medium', 'High', 'Very High'])
+            df['high_loan_to_income'] = (df['loan_percent_income'] > 0.5).astype(int)
+            df['intent_grade_interaction'] = df['loan_intent'].astype(str) + '_' + df['loan_grade'].astype(str)
+            df['loan_to_employment'] = df['loan_amnt'] / (df['person_emp_length'] + 1)
+            df['is_new_credit_user'] = (df['cb_person_cred_hist_length'] < 2).astype(int)
+            df['home_ownership_intent'] = df['person_home_ownership'].astype(str) + '_' + df['loan_intent'].astype(str)
+            df['rate_to_grade'] = df.groupby('loan_grade')['loan_int_rate'].transform('mean')
+            df['high_interest_rate'] = (df['loan_int_rate'] > df['loan_int_rate'].mean()).astype(int)
+            df['risk_score'] = df['loan_percent_income'] * df['loan_int_rate'] * (5 - df['loan_grade'].map({'A':5, 'B':4, 'C':3, 'D':2, 'E':1, 'F':0, 'G':0}))
+            df['age_to_credit_history'] = df['person_age'] / (df['cb_person_cred_hist_length'] + 1)
+            df['income_home_mismatch'] = ((df['person_income'] > df['person_income'].quantile(0.8)) & (df['person_home_ownership'] == 'RENT')).astype(int)
+            df['default_grade_interaction'] = df['cb_person_default_on_file'].astype(str) + '_' + df['loan_grade'].astype(str)
+            df['normalized_loan_amount'] = df.groupby('loan_intent')['loan_amnt'].transform(lambda x: (x - x.mean()) / x.std())
+            df['income_to_loan'] = df['person_income'] / df['loan_amnt']
+            df['age_cubed'] = df['person_age'] ** 3
+            df['log_loan_amnt'] = np.log1p(df['loan_amnt'])
+            df['age_interest_interaction'] = df['person_age'] * df['loan_int_rate']
+            df['loan_amount_category'] = pd.qcut(df['loan_amnt'], q=5, labels=['Very Small', 'Small', 'Medium', 'Large', 'Very Large'])
+            df['credit_history_to_age'] = df['cb_person_cred_hist_length'] / df['person_age']
+            df['high_loan_amount'] = (df['loan_amnt'] > df['loan_amnt'].quantile(0.75)).astype(int)
+            df['home_ownership_loan_interaction'] = df['person_home_ownership'].astype(str) + '_' + df['loan_amount_category'].astype(str)
+            df['rate_to_credit_history'] = df['loan_int_rate'] / (df['cb_person_cred_hist_length'] + 1)
+            df['intent_home_match'] = ((df['loan_intent'] == 'HOMEIMPROVEMENT') & (df['person_home_ownership'] == 'OWN')).astype(int)
+            df['creditworthiness_score'] = (df['person_income'] / (df['loan_amnt'] * df['loan_int_rate'])) * (df['cb_person_cred_hist_length'] + 1)
+            df['age_to_employment'] = df['person_age'] / (df['person_emp_length'] + 1)
+            df['age_income_mismatch'] = ((df['person_age'] < 30) & (df['person_income'] > df['person_income'].quantile(0.9))).astype(int)
+            df['default_rate_interaction'] = df['cb_person_default_on_file'].astype(str) + '_' + pd.cut(df['loan_int_rate'], bins=5, labels=['Very Low', 'Low', 'Medium', 'High', 'Very High']).astype(str)
+            df['normalized_income'] = df.groupby('age_category')['person_income'].transform(lambda x: (x - x.mean()) / x.std())
+            df['rate_to_age'] = df['loan_int_rate'] / df['person_age']
+            df['high_risk_flag'] = ((df['loan_percent_income'] > 0.4) &
+                                    (df['loan_int_rate'] > df['loan_int_rate'].mean()) &
+                                    (df['cb_person_default_on_file'] == 'Y')).astype(int)
 
+            num_features = ['person_age', 'person_income', 'person_emp_length', 'loan_amnt', 'loan_int_rate', 'loan_percent_income']
+            poly = PolynomialFeatures(degree=2, include_bias=False, interaction_only=True)
+            poly_features = poly.fit_transform(df[num_features])
+
+            try:
+                poly_features_names = poly.get_feature_names_out(num_features)
+            except AttributeError:
+                poly_features_names = poly.get_feature_names(num_features)
+
+            for i, name in enumerate(poly_features_names[len(num_features):]):
+                df[f'poly_{name}'] = poly_features[:, len(num_features) + i]
+
+            df['age_sin'] = np.sin(2 * np.pi * df['person_age'] / 100)
+            df['age_cos'] = np.cos(2 * np.pi * df['person_age'] / 100)
+            df['stability_score'] = (df['person_emp_length'] * df['person_income']) / (df['loan_amnt'] * (df['cb_person_cred_hist_length'] + 1))
+
+            settings.combined_df = df
+
+            return settings
+        
+
+    class ConvertObjectToCategorical():
+        @staticmethod
+        def transform(settings : DataSciencePipelineSettings):
+            cat_cols = [col for col in settings.combined_df.columns if settings.combined_df[col].dtype == 'object']#settings.categorical_col_names
+            settings.combined_df[cat_cols] = settings.combined_df[cat_cols].astype('category')
+            return settings
 
         
     og_training_col_names = settings.training_col_names
@@ -207,16 +284,21 @@ if __name__ == "__main__":
                 # ClassBinner.transform,
                 # SVCFeature.transform,
                 # MartynovAndreyFeatures.transform,
-                ConvertEverythingToCategorical.transform,
+                TrupologFeatures.transform,
+                ConvertObjectToCategorical.transform,
+                # ConvertEverythingToCategorical.transform,
                 ]
 
     settings = reduce(lambda acc, func: func(acc), transforms, settings)
     settings.update()
     train_df = settings.train_df
 
-    changes = ['convert_all_to_categorical']
+    changes = list(set(settings.combined_df.drop(columns='loan_status').columns).difference(og_training_col_names))
+    # changes = ['person_income_categorical']
     
     # changes = [x[0] + "_" + x[1] for x in changes]
+    cat_cols = [col for col in train_df.columns if train_df[col].dtype == 'object']#settings.categorical_col_names
+    train_df[cat_cols] = train_df[cat_cols].astype('category')
     X, y = train_df.drop(columns=target_col_name), train_df[target_col_name]
 
     lgb_params = {'objective': 'binary',
@@ -231,7 +313,7 @@ if __name__ == "__main__":
                 mean_cv_score,_,_ = CrossValidationExecutor(model,
                                                             roc_auc_score,
                                                             kf,
-                                                            ).run(X[og_training_col_names], y)
+                                                            ).run(X[og_training_col_names + [change]], y)
                 all_scores += [mean_cv_score[1]]
 
         # population = np.array(all_scores)

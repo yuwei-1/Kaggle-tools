@@ -1,13 +1,15 @@
 import unittest
 import numpy as np
+import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import ConstantKernel, RBF, WhiteKernel
-from sklearn.metrics import mean_squared_error, root_mean_squared_error
-from sklearn.model_selection import KFold, train_test_split
+from sklearn.metrics import mean_squared_error, roc_auc_score, root_mean_squared_error
+from sklearn.model_selection import KFold, StratifiedKFold, train_test_split
 from ktools.fitting.cross_validation_executor import CrossValidationExecutor
 from ktools.hyperparameter_optimization.model_param_grids import KNNParamGrid
 from ktools.modelling.models.hgb_model import HGBModel
+from ktools.modelling.models.keras_embedding_model import KerasEmbeddingModel
 from ktools.modelling.models.knn_model import KNNModel
 from ktools.modelling.models.svm_model import SVMModel
 from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings
@@ -120,3 +122,98 @@ class TestModelSyntax(unittest.TestCase):
                                     root_mean_squared_error,
                                     kf,
                                     ).run(self.X, self.y, local_transform_list=[remove_outliers, subsample])
+        
+    def test_keras_embedding_model(self):
+        train_csv_path = "/Users/yuwei-1/Documents/projects/Kaggle-tools/data/loan_approval/train.csv"
+        original_csv_path = "/Users/yuwei-1/Documents/projects/Kaggle-tools/data/loan_approval/original.csv"
+        test_csv_path = "/Users/yuwei-1/Documents/projects/Kaggle-tools/data/loan_approval/test.csv"
+        target_col_name = "loan_status"
+
+        test_data = pd.read_csv(test_csv_path).assign(source=0)
+        train_data = pd.read_csv(train_csv_path).assign(source=0)
+        original_data = pd.read_csv(original_csv_path).assign(source=1)
+
+        def to_rank(col):
+            return col.fillna(-1).rank(method='dense').astype('int') - 1
+
+        def fe(df):
+            cat_cols = ['person_home_ownership', 'loan_intent', 'loan_grade', 'cb_person_default_on_file']    
+            df['cb_person_cred_hist_length'] = to_rank(df['cb_person_cred_hist_length'])
+            df['loan_amnt'] = to_rank(df['loan_amnt'])
+            df['person_income'] = to_rank(df['person_income'])
+            df['loan_int_rate'] = to_rank(df['loan_int_rate'])
+            df['person_emp_length'] = to_rank(df['person_emp_length'])
+            df['loan_percent_income'] = to_rank(df['loan_percent_income'])
+            df['person_age'] = to_rank(df['person_age'])
+            for col in cat_cols:
+                col_series = df[col].fillna('#NA#')
+                mapping = col_series.value_counts().to_dict()
+                code_as = 0
+                for i, key in enumerate(reversed(mapping)):
+                    mapping[key] = code_as
+                    code_as += 1
+                df[col] = col_series.map(mapping)
+                df[col] = df[col].astype('int')
+            return df
+
+
+        df_all = fe(pd.concat([train_data, test_data, original_data]))
+
+        idxs = (~df_all[target_col_name].isna()) & (df_all['source'] == 0)
+        train_data = df_all[idxs].reset_index(drop=True)
+        idxs = ( df_all[target_col_name].isna()) & (df_all['source'] == 0)
+        test_data = df_all[idxs].drop(columns=[target_col_name])
+        original_data = df_all.query('source == 1') 
+        train_data.drop(columns="id", inplace=True)
+        original_data.drop(columns="id", inplace=True)       
+
+        cont_features = ['cb_person_default_on_file', 'source']
+        cat_features = [
+            'person_home_ownership',
+            'loan_intent',
+            'loan_grade',
+            'person_emp_length',
+            'loan_int_rate',
+            'loan_percent_income',
+            'person_age',
+            'person_income',
+            'loan_amnt',
+            'cb_person_cred_hist_length']
+
+        cat_features_card = []
+        for f in cat_features:
+            cat_features_card += [1 + df_all[f].max()]
+
+
+        features = cat_features + cont_features
+
+        cat_idxs= []
+        cont_idxs = []
+        for f in cat_features:
+            cat_idxs.append([features.index(f)])
+        for f in cont_features:
+            cont_idxs.append(features.index(f))
+
+        kem = KerasEmbeddingModel(cont_idxs,
+                                    cat_idxs,
+                                    cat_features_card,
+                                    features,
+                                    plot_model=True)
+        
+
+        target_col_name = "loan_status"
+
+        kf = StratifiedKFold(10, shuffle=True, random_state=42)
+
+        cve = CrossValidationExecutor(kem,
+                                    roc_auc_score,
+                                    kf,
+                                    verbose=2
+                                    )
+
+        score_tuple, oofs, model_list = cve.run(train_data.drop(columns=target_col_name),
+                                                train_data[[target_col_name]],
+                                                additional_data=[original_data.drop(columns=target_col_name), 
+                                                                 original_data[[target_col_name]]])
+        
+        self.assertTrue(score_tuple[0] == 0.9634649329435374)
