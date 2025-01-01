@@ -5,9 +5,9 @@ from lightgbm import LGBMRegressor
 from xgboost import XGBRegressor
 from sklearn.model_selection import KFold
 from sklearn.metrics import root_mean_squared_error
-from ktools.modelling.models.catboost_model import CatBoostModel
-from ktools.modelling.models.lgbm_model import LGBMModel
-from ktools.modelling.models.xgb_model import XGBoostModel
+from ktools.modelling.ktools_models.catboost_model import CatBoostModel
+from ktools.modelling.ktools_models.lgbm_model import LGBMModel
+from ktools.modelling.ktools_models.xgb_model import XGBoostModel
 from ktools.hyperparameter_optimization.model_param_grids import *
 from ktools.hyperparameter_optimization.optuna_hyperparameter_optimizer import OptunaHyperparameterOptimizer
 from ktools.preprocessing.basic_feature_transformers import *

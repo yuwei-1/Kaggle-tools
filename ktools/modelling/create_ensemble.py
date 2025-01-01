@@ -7,9 +7,9 @@ import pandas as pd
 from sklearn.model_selection import KFold
 sys.path.append("/Users/yuwei-1/Documents/projects/Kaggle-tools")
 from scipy.optimize import minimize
-from ktools.modelling.models.catboost_model import CatBoostModel
-from ktools.modelling.models.lgbm_model import LGBMModel
-from ktools.modelling.models.xgb_model import XGBoostModel
+from ktools.modelling.ktools_models.catboost_model import CatBoostModel
+from ktools.modelling.ktools_models.lgbm_model import LGBMModel
+from ktools.modelling.ktools_models.xgb_model import XGBoostModel
 from sklearn.metrics import root_mean_squared_error
 
 

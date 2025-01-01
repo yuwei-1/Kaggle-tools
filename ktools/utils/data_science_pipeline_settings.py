@@ -3,12 +3,17 @@ from typing import *
 import pandas as pd
 
 
+def func(x):
+    return x
+
+
 @dataclass
 class DataSciencePipelineSettings:
     train_csv_path : str
     test_csv_path : str
     target_col_name : str
     original_csv_path : str = None
+    original_csv_processing : callable = func
     sample_submission_path : str = None
     training_col_names : List[str] = None
     categorical_col_names : List[str] = None
@@ -28,6 +33,7 @@ class DataSciencePipelineSettings:
             train_df = train_df.assign(source=0)
             test_df = test_df.assign(source=0)
             original_df = self._smart_drop_index(pd.read_csv(self.original_csv_path)).assign(source=1)
+            original_df = self.original_csv_processing(original_df)
 
             pd.testing.assert_index_equal(train_df.columns.sort_values(), original_df.columns.sort_values(), check_exact=True)
             pd.testing.assert_series_equal(train_df.dtypes.sort_index(), original_df.dtypes.sort_index(), check_exact=True)
@@ -51,7 +57,10 @@ class DataSciencePipelineSettings:
 
     @staticmethod
     def _smart_drop_index(df):
-        differences = df.iloc[:, 0].diff().dropna()
-        if differences.nunique() == 1:
-            df = df.drop(columns=df.columns[0])
+        try:
+            differences = df.iloc[:, 0].diff().dropna()
+            if differences.nunique() == 1:
+                df = df.drop(columns=df.columns[0])
+        except:
+            pass
         return df

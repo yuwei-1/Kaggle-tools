@@ -9,11 +9,12 @@ def create_oofs_from_model(cross_validation_executor,
                            y_train,
                            X_test,
                            additional_data = None,
+                           output_transform_list = [lambda x : x],
                            model_string : str = None,
                            directory_path : str = None,
                            sample_submission_file : str = None
                            ):
-    score_tuple, oof_predictions, model_list = cross_validation_executor.run(X_train, y_train, additional_data=additional_data)
+    score_tuple, oof_predictions, model_list = cross_validation_executor.run(X_train, y_train, additional_data=additional_data, output_transform_list=output_transform_list)
     num_splits = cross_validation_executor._num_splits
 
     test_predictions = np.zeros(X_test.shape[0])

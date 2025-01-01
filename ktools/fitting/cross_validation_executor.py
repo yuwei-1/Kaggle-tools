@@ -1,5 +1,5 @@
 from functools import reduce
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Callable
 import numpy as np
 import pandas as pd
 from copy import deepcopy
@@ -12,7 +12,7 @@ class CrossValidationExecutor:
 
     def __init__(self,
                  sklearn_model_instance : ISklearnModel,
-                 evaluation_metric : callable,
+                 evaluation_metric : Callable,
                  kfold_object : ISklearnKFoldObject,
                  use_test_as_valid=True,
                  num_classes=None,
@@ -37,6 +37,7 @@ class CrossValidationExecutor:
         cv_results = []
         model_list = []
         oof_predictions = np.zeros(y.shape[0]) if self._num_classes is None else np.zeros((y.shape[0], self._num_classes))
+        metric_predictions = np.zeros(y.shape[0]) if self._num_classes is None else np.zeros((y.shape[0], self._num_classes))
 
         for i, (train_index, val_index) in enumerate(self._kf.split(X, y)):
             
@@ -54,15 +55,17 @@ class CrossValidationExecutor:
 
             model = deepcopy(self.model).fit(X_train, y_train, validation_set=validation_set)
             model_list += [model]
-            y_pred = reduce(lambda acc, func: func(acc), output_transform_list, model.predict(X_test))
+            y_pred = model.predict(X_test)
+            y_pred_processed = reduce(lambda acc, func: func(acc), output_transform_list, y_pred)
             
-            cv_results += [self._evaluation_metric(y_test, y_pred)]
+            cv_results += [self._evaluation_metric(y_test, y_pred_processed)]
             oof_predictions[val_index] = y_pred
+            metric_predictions[val_index] = y_pred_processed
 
             if self._verbose > 1:
                 print(f"The CV results of the current fold is {cv_results[-1]}")
 
-        oof_score = self._evaluation_metric(y, oof_predictions)
+        oof_score = self._evaluation_metric(y, metric_predictions)
         mean_cv_score = np.mean(cv_results)
         score_tuple = (oof_score, mean_cv_score)
 

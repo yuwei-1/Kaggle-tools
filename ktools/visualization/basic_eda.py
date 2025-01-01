@@ -1,5 +1,7 @@
 import pandas as pd
+import seaborn as sns
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import OrdinalEncoder
 
 
 class BasicDatasetEDA:
@@ -41,6 +43,18 @@ class BasicDatasetEDA:
         print("="*50, title, "="*50)
         categorical_columns = combined_df.select_dtypes(include=['object']).columns.tolist()
         self._plot_categorical(categorical_columns)
+
+        title = "Linear correlation plot"
+        print("="*50, title, "="*50)
+        ordinal_df = combined_df.copy()
+        ordinal_encoder = OrdinalEncoder(encoded_missing_value=-1, handle_unknown="use_encoded_value", unknown_value=-1)
+        ordinal_df[categorical_columns] = ordinal_encoder.fit_transform(ordinal_df[categorical_columns])
+        correlation_matrix = ordinal_df.corr(method="spearman")
+
+        plt.figure(figsize=(15, 15))
+        sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm", fmt=".2f", cbar=True)
+        plt.title("Correlation Heatmap")
+        plt.show()
 
 
         title = "Target distribution"

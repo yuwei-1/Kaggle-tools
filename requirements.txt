@@ -21,4 +21,8 @@ hillclimbers
 pytorch-tabnet
 tensorflow
 pydot
-xlearn==0.32a1
+openfe
+lightautoml
+h2o
+flaml
+ydf

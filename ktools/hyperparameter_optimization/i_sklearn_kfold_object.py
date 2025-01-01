@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 
 
 class ISklearnKFoldObject(ABC):
+    random_state : int = 0
 
     @abstractmethod
     def split(X, y):

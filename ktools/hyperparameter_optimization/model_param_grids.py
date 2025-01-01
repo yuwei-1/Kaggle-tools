@@ -165,7 +165,7 @@ class HGBParamGrid(IModelParamGrid):
     @staticmethod
     def get(trial : optuna.Trial):
         params = {
-            "max_bins" : trial.suggest_int("max_bins", 2, 500),
+            "max_bins" : trial.suggest_int("max_bins", 2, 255),
             "learning_rate": trial.suggest_float("learning_rate", 1e-2, 0.3, log=True),
             "max_depth": trial.suggest_int("max_depth", 3, 50),
             "max_leaf_nodes" : trial.suggest_int("max_leaf_nodes", 2, 400, log=True),
@@ -179,4 +179,56 @@ class HGBParamGrid(IModelParamGrid):
             "tol": trial.suggest_float("tol", 1e-7, 1e-2, log=True), 
             "smooth" : trial.suggest_float("smooth", 1e2, 1e4, log=True),           
         }
+        return params
+    
+
+class YDFParamGrid(IModelParamGrid):
+    @staticmethod
+    def get(trial : optuna.Trial):
+        params = {
+            "categorical_algorithm" : trial.suggest_categorical("categorical_algorithm", ["CART", "RANDOM"]),
+            "categorical_set_split_min_item_frequency" : trial.suggest_int("categorical_set_split_min_item_frequency", 1, 200),
+            # "goss_alpha" : trial.suggest_float("goss_alpha", 0, 1),
+            # "goss_beta" : trial.suggest_float("goss_beta", 0, 1),
+            "honest" : trial.suggest_categorical("honest", [True, False]),
+            "l1_regularization" : trial.suggest_float("l1_regularization", 1e-4, 1e2, log=True),
+            "l2_categorical_regularization" : trial.suggest_float("l2_categorical_regularization", 1e-4, 1e2, log=True),
+            "l2_regularization" : trial.suggest_float("l2_regularization", 1e-4, 1e2, log=True),
+            "max_depth" : trial.suggest_int("max_depth", -1, 300),
+            "max_num_nodes" : trial.suggest_int("max_num_nodes", -1, 200),
+            "min_examples" : trial.suggest_int("min_examples", 1, 1e3, log=True),
+            "num_boost_round" : 3000,
+        }
+        return params
+    
+
+class YDFLocalParamGrid(YDFParamGrid):
+    def get(self, trial : optuna.Trial):
+        base_params = super().get(trial)
+        params = {
+            "growing_strategy" : "LOCAL",
+        }
+        params.update(base_params)
+        return params
+    
+class YDFBestGlobalParamGrid(YDFParamGrid):
+    def get(self, trial : optuna.Trial):
+        base_params = super().get(trial)
+        params = {
+            "growing_strategy" : "BEST_FIRST_GLOBAL",
+            "subsample" : trial.suggest_float("subsample", 0.5, 1),
+        }
+        params.update(base_params)
+        return params
+    
+class YDFGossBestGlobalParamGrid(YDFParamGrid):
+    def get(self, trial : optuna.Trial):
+        base_params = super().get(trial)
+        params = {
+            "growing_strategy" : "BEST_FIRST_GLOBAL",
+            "goss_alpha" : trial.suggest_float("goss_alpha", 0, 1),
+            "goss_beta" : trial.suggest_float("goss_beta", 0, 1),
+            "use_goss" : True
+        }
+        params.update(base_params)
         return params

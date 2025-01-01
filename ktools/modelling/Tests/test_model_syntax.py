@@ -1,17 +1,21 @@
+from functools import reduce
 import unittest
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import OrdinalEncoder, StandardScaler
 from sklearn.gaussian_process import GaussianProcessRegressor
 from sklearn.gaussian_process.kernels import ConstantKernel, RBF, WhiteKernel
-from sklearn.metrics import mean_squared_error, roc_auc_score, root_mean_squared_error
+from sklearn.metrics import mean_squared_error, roc_auc_score, root_mean_squared_error, accuracy_score
 from sklearn.model_selection import KFold, StratifiedKFold, train_test_split
 from ktools.fitting.cross_validation_executor import CrossValidationExecutor
 from ktools.hyperparameter_optimization.model_param_grids import KNNParamGrid
-from ktools.modelling.models.hgb_model import HGBModel
-from ktools.modelling.models.keras_embedding_model import KerasEmbeddingModel
-from ktools.modelling.models.knn_model import KNNModel
-from ktools.modelling.models.svm_model import SVMModel
+from ktools.modelling.create_oof_from_model import create_oofs_from_model
+from ktools.modelling.ktools_models.hgb_model import HGBModel
+from ktools.modelling.ktools_models.keras_embedding_model import KerasEmbeddingModel
+from ktools.modelling.ktools_models.knn_model import KNNModel
+from ktools.modelling.ktools_models.svm_model import SVMModel
+from ktools.modelling.ktools_models.tabnet_model import TabNetModel
+from ktools.preprocessing.basic_feature_transformers import *
 from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings
 
 
@@ -217,3 +221,75 @@ class TestModelSyntax(unittest.TestCase):
                                                                  original_data[[target_col_name]]])
         
         self.assertTrue(score_tuple[0] == 0.9634649329435374)
+
+    def test_tab_net(self):
+        train_csv_path = "/Users/yuwei-1/Documents/projects/Kaggle-tools/data/mental_health/train.csv"
+        original_csv_path = "/Users/yuwei-1/Documents/projects/Kaggle-tools/data/mental_health/original.csv"
+        test_csv_path = "/Users/yuwei-1/Documents/projects/Kaggle-tools/data/mental_health/test.csv"
+        sample_sub_csv_path = "/Users/yuwei-1/Documents/projects/Kaggle-tools/data/mental_health/sample_submission.csv"
+        target_col_name = "Depression"
+
+
+        settings = DataSciencePipelineSettings(train_csv_path,
+                                                test_csv_path,
+                                                target_col_name, 
+                                                )
+        
+        class OrdinalEncoderAllTransform:
+            @staticmethod
+            def transform(original_settings : DataSciencePipelineSettings):
+                settings = deepcopy(original_settings)
+                enc = OrdinalEncoder()
+                settings.combined_df[settings.training_col_names] = enc.fit_transform(settings.combined_df[settings.training_col_names])
+                return settings
+        
+        transforms = [
+                    FillNullValues.transform,
+                    # ConvertAllToCategorical.transform,
+                    # ConvertObjectToCategorical.transform,
+                    OrdinalEncoderAllTransform.transform
+                    ]
+
+        settings = reduce(lambda acc, func: func(acc), transforms, settings)
+        settings.update()
+
+        train_df, test_df = settings.update()
+        test_df.drop(columns=[target_col_name], inplace=True)
+        X, y = train_df.drop(columns=target_col_name), train_df[[target_col_name]]
+
+        cat_idcs = list(range(len(test_df.columns)))
+        cat_dims = list(test_df.max().values + 1)
+        cat_dims = [int(x) for x in cat_dims]
+
+        params = {"cat_idcs" : cat_idcs, 
+                  "cat_dims" : cat_dims, 
+                  "task" : "binary", 
+                  "patience" : 2, 
+                  "n_d" : 4, 
+                  "n_a" : 4, 
+                  "verbose" : 1, 
+                  "eval_metric" : ['accuracy']}
+
+        kf = StratifiedKFold(10, shuffle=True, random_state=42)
+
+        cve = CrossValidationExecutor(TabNetModel(**params),
+                                    accuracy_score,
+                                    kf,
+                                    verbose=2
+                                    )
+
+        model_string = "scriptchef_tabnet_v0"
+
+        def convert_to_class(x):
+            x = np.where(x >= 0.5, 1, 0)
+            return x
+        
+        _ = create_oofs_from_model(cve,
+                                X,
+                                y,
+                                test_df,
+                                output_transform_list=[convert_to_class],
+                                model_string=model_string,
+                                directory_path="/kaggle/working/",
+                                sample_submission_file=sample_sub_csv_path
+                                )
