@@ -1,9 +1,9 @@
 from sklearn.preprocessing import MinMaxScaler, TargetEncoder
 from sklearn.ensemble import HistGradientBoostingClassifier, HistGradientBoostingRegressor
-from ktools.modelling.Interfaces.i_sklearn_model import ISklearnModel
+from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
 
 
-class HGBModel(ISklearnModel):
+class HGBModel(IKtoolsModel):
 
     def __init__(self,
                  smooth="auto", 

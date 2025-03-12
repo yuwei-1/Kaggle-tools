@@ -51,7 +51,8 @@ class IAutomlWrapper(ABC):
 
         settings = reduce(lambda acc, func: func(acc), self._data_transforms, settings)
         train_df, test_df = settings.update()
-        test_df.drop(columns=[self._target_col_name], inplace=True)
+        if not isinstance(self._target_col_name, list): self._target_col_name = [self._target_col_name]
+        test_df.drop(columns=self._target_col_name, inplace=True)
         return train_df, test_df
 
     @abstractmethod

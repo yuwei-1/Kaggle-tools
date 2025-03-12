@@ -12,7 +12,7 @@ from ktools.modelling.ktools_models.hgb_model import HGBModel
 from ktools.modelling.ktools_models.keras_embedding_model import KerasEmbeddingModel
 from ktools.modelling.ktools_models.keras_factorization_machine import KerasFM
 from ktools.modelling.ktools_models.lgbm_model import LGBMModel
-from ktools.modelling.ktools_models.pytorch_ffn_model import PytorchFFNModel
+from ktools.modelling.ktools_models.pytorch_embedding_model import PytorchFFNModel
 from ktools.modelling.ktools_models.tabnet_model import TabNetModel
 from ktools.modelling.ktools_models.xgb_model import XGBoostModel
 from ktools.modelling.ktools_models.yggdrasil_gbt_model import YDFGBoostModel

@@ -1,6 +1,8 @@
 from collections import OrderedDict
+import random
 import numpy as np
 from sklearn.model_selection import train_test_split
+from enum import Enum
 import math
 import copy
 import torch
@@ -9,110 +11,28 @@ import torch.nn.functional as F
 from typing import List
 from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import mean_squared_error
-from ktools.modelling.Interfaces.i_sklearn_model import ISklearnModel
+from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
+from ktools.modelling.ktools_models.pytorch_nns.ffn_pytorch_embedding_model import FFNPytorchEmbeddingModel
+from ktools.modelling.ktools_models.pytorch_nns.odst_pytorch_embedding_model import ODSTPytorchEmbeddingModel
 
 
-
-class BasicFeedForwardNetwork(nn.Module):
-
-    def __init__(self,
-                 input_dim : int,
-                 output_dim : int,
-                 categorical_idcs : List[int],
-                 categorical_sizes : List[int],
-                 categorical_embedding : List[int],
-                 activation : str,
-                 last_activation : str,
-                 num_hidden_layers : int = 1,
-                 largest_hidden_dim :int = 256,
-                 dim_decay : float = 1.0,
-                 ):
-        super().__init__()
-        self._input_dim = input_dim
-        self._output_dim = output_dim
-        
-        self._categorical_idcs = categorical_idcs
-        self._categorical_sizes = categorical_sizes
-        self._categorical_embedding = categorical_embedding
-        self._num_categories = len(categorical_idcs)
-        self._activation = activation
-        self._last_activation = last_activation
-
-        self._expanded_dim = self._input_dim - self._num_categories + sum(self._categorical_embedding)
-        self._largest_hidden_dim = largest_hidden_dim
-        self._num_hidden_layers = num_hidden_layers
-        self._dim_decay = dim_decay
-        
-        self.embedding_layers = self._create_embedding_layers()
-        self.model = self._create_dense_layers()
-
-    def forward(self, x) -> torch.Tensor:
-        x = self.forward_embeddings(x)
-        x = self.model(x)
-        return x
-      
-    def forward_embeddings(self, x):
-        inputs = ()
-        for i in range(self._input_dim):
-            if i in self._categorical_idcs:
-                feature = x[:, i].long()
-            else:
-                feature = x[:, i:i+1]
-            inputs += (self.embedding_layers[i](feature),)
-        x = torch.cat(inputs, dim=1)
-        return x
-    
-    def _create_dense_layers(self):
-        layers = OrderedDict()
-        prev_dim = self._expanded_dim
-        curr_dim = self._largest_hidden_dim
-
-        for l in range(self._num_hidden_layers):
-            layers[f'layer_{l}'] = nn.Linear(prev_dim, curr_dim)
-            layers[f'activation_{l}'] = self._get_activation(self._activation)
-            prev_dim = curr_dim
-            curr_dim = max(int(curr_dim*self._dim_decay), self._output_dim)
-        
-        layers['last_layer'] = nn.Linear(prev_dim, self._output_dim)
-        layers['last_activation'] = self._get_activation(self._last_activation)
-        model = nn.Sequential(layers)
-        return model
-
-    def _create_embedding_layers(self):
-        embeddings = []
-        for i in range(self._input_dim):
-            if i in self._categorical_idcs:
-                j = self._categorical_idcs.index(i)
-                embeddings += [nn.Embedding(self._categorical_sizes[j], self._categorical_embedding[j])]
-            else:
-                embeddings += [nn.Identity()]
-        return embeddings
-    
-    def _get_activation(self, activation):
-        if activation == 'relu':
-            return nn.ReLU()
-        elif activation == 'gelu':
-            return nn.GELU()
-        elif activation == 'sigmoid':
-            return nn.Sigmoid()
-        elif activation == 'none':
-            return nn.Identity()
-        
+def set_seed(seed: int = 42):
+    random.seed(seed)  # Python random seed
+    np.random.seed(seed)  # NumPy random seed
+    torch.manual_seed(seed)  # PyTorch CPU seed
+    torch.cuda.manual_seed_all(seed)  # PyTorch GPU seed (if available)
+    torch.backends.cudnn.deterministic = True  # Ensures deterministic behavior
+    torch.backends.cudnn.benchmark = False  # May impact performance, but ensures reproducibility
 
 class MyDataset(Dataset):
     def __init__(self, X, y):
-        # self.X = torch.tensor(X.to_numpy(), dtype=torch.float32)
-        # self.y = torch.tensor(y.to_numpy(), dtype=torch.float32)
         X = X.to_numpy().astype(np.float32)
         y = y.to_numpy().astype(np.float32)
         self.X = torch.from_numpy(X)
         self.y = torch.from_numpy(y)
 
-        # self.X = torch.from_numpy(X.to_numpy())
-        # self.y = torch.from_numpy(y.to_numpy())
-
     def __len__(self):
-        return len(self.X)
+        return self.X.shape[0]
 
     def __getitem__(self, idx):
         return self.X[idx], self.y[idx]
@@ -120,24 +40,25 @@ class MyDataset(Dataset):
 
 def prep_torch_dataset(X, y, batch_size):
     torch_dataset = MyDataset(X, y)
-    dataloader = DataLoader(torch_dataset, batch_size=batch_size, shuffle=True)
-    # dataloader = CustomDataLoader(X, y, batch_size).split_data()
+    dataloader = DataLoader(torch_dataset, batch_size=batch_size, shuffle=True, num_workers=0)
     return dataloader
 
 
-class PytorchFFNModel(ISklearnModel):
+class SupportedPytorchEmbeddingModels(Enum):
+    FEEDFORWARD = FFNPytorchEmbeddingModel
+    ODST = ODSTPytorchEmbeddingModel
+
+
+class PytorchEmbeddingModel(IKtoolsModel):
     
     def __init__(self,
+                 model_string : str,
                  input_dim : int,
                  output_dim : int,
                  categorical_idcs : List[int],
                  categorical_sizes : List[int],
                  categorical_embedding : List[int],
-                 activation : str,
-                 last_activation : str,
-                 num_hidden_layers : int = 1,
-                 largest_hidden_dim :int = 256,
-                 dim_decay : float = 1.0,
+                 *model_args,
                  loss=nn.MSELoss(),
                  metric_callable=mean_squared_error,
                  optimizer=torch.optim.Adam,
@@ -149,19 +70,18 @@ class PytorchFFNModel(ISklearnModel):
                  maximise=False,
                  patience=2,
                  random_state : int = 42,
-                 verbose : int = 1) -> None:
+                 verbose : int = 1,
+                 **model_kwargs) -> None:
         
-        torch.manual_seed(random_state)
-        self.model = BasicFeedForwardNetwork(input_dim,
-                                            output_dim,
-                                            categorical_idcs,
-                                            categorical_sizes,
-                                            categorical_embedding,
-                                            activation,
-                                            last_activation,
-                                            num_hidden_layers,
-                                            largest_hidden_dim,
-                                            dim_decay)
+        set_seed(random_state)
+        model_cls = SupportedPytorchEmbeddingModels[model_string.upper()].value
+        self.model = model_cls(input_dim,
+                                output_dim,
+                                categorical_idcs,
+                                categorical_sizes,
+                                categorical_embedding,
+                                *model_args,
+                                **model_kwargs)
         self.initialize_weights()
         self._loss = loss
         self._metric_callable = metric_callable
@@ -224,7 +144,6 @@ class PytorchFFNModel(ISklearnModel):
             print(f"{str(self._metric_callable)} value for valid set: {value}")
 
             if best_score < self._maximise * value:
-                print(f"here at epoch {epoch}")
                 best_score = self._maximise * value
                 best_epoch = epoch
                 model_state_dicts[epoch] = copy.deepcopy(self.model.state_dict())

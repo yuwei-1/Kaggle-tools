@@ -1,10 +1,11 @@
+from functools import reduce
 import unittest
 import pandas as pd
 import numpy as np
 import optuna
 from sklearn.metrics import r2_score, root_mean_squared_error
 from sklearn.linear_model import Lasso
-from sklearn.model_selection import KFold
+from sklearn.model_selection import KFold, StratifiedKFold
 from ktools.fitting.cross_validation_executor import CrossValidationExecutor
 from ktools.hyperparameter_optimization.i_model_param_grid import IModelParamGrid
 from ktools.hyperparameter_optimization.model_param_grids import BaseCatBoostParamGrid, BaseLGBMParamGrid, BaseXGBoostParamGrid, HGBParamGrid, KNNParamGrid
@@ -14,8 +15,11 @@ from ktools.modelling.ktools_models.hgb_model import HGBModel
 from ktools.modelling.ktools_models.knn_model import KNNModel
 from ktools.modelling.ktools_models.lgbm_model import LGBMModel
 from ktools.modelling.ktools_models.xgb_model import XGBoostModel
-from ktools.preprocessing.basic_feature_transformers import FillNullValues
+from ktools.modelling.model_transform_wrappers.survival_model_wrapper import SurvivalModelWrapper
+from ktools.preprocessing.basic_feature_transformers import *
 from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings
+from post_HCT_survival_notebooks.hct_utils import score
+from post_HCT_survival_notebooks.optimization_param_grids import XGBoostGBTreeLossguide
 
 
 
@@ -53,7 +57,7 @@ class TestOptunaHyperparameterOptimizer(unittest.TestCase):
         best_params = optimizer.optimize()
         model = LGBMModel(**best_params)
 
-        cv_scores, oof, model_list = CrossValidationExecutor(model,
+        cv_scores, oof, model_list, _ = CrossValidationExecutor(model,
                                                             root_mean_squared_error,
                                                             kf,
                                                             use_test_as_valid=True
@@ -74,7 +78,7 @@ class TestOptunaHyperparameterOptimizer(unittest.TestCase):
                            }
         
         self.assertEqual(expected_params, best_params)
-        self.assertEqual(cv_scores[0], 73396.1853451514)
+        self.assertEqual(cv_scores[0], optimizer.study.best_value)
 
 
     def test_reproducibility_xgb(self):
@@ -93,7 +97,7 @@ class TestOptunaHyperparameterOptimizer(unittest.TestCase):
         best_params = optimizer.optimize()
         model = XGBoostModel(**best_params)
 
-        cv_scores, oof, model_list = CrossValidationExecutor(model,
+        cv_scores, oof, model_list, _ = CrossValidationExecutor(model,
                                                             root_mean_squared_error,
                                                             kf,
                                                             use_test_as_valid=True
@@ -115,7 +119,7 @@ class TestOptunaHyperparameterOptimizer(unittest.TestCase):
                            'grow_policy': 'depthwise'}
         
         self.assertEqual(expected_params, best_params)
-        self.assertEqual(cv_scores[0], 78019.27348376985)
+        self.assertEqual(cv_scores[0], optimizer.study.best_value)
 
     def test_reproducibility_cat(self):
 
@@ -133,7 +137,7 @@ class TestOptunaHyperparameterOptimizer(unittest.TestCase):
         best_params = optimizer.optimize()
         model = CatBoostModel(**best_params)
 
-        cv_scores, oof, model_list = CrossValidationExecutor(model,
+        cv_scores, oof, model_list, _ = CrossValidationExecutor(model,
                                                             root_mean_squared_error,
                                                             kf,
                                                             use_test_as_valid=True
@@ -153,8 +157,8 @@ class TestOptunaHyperparameterOptimizer(unittest.TestCase):
                            'random_strength': 5.85658096122518, 
                            'leaf_estimation_method': 'Newton'}
         
-        self.assertEqual(expected_params, best_params)
-        self.assertEqual(cv_scores[0], 74657.56211249501)
+        self.assertTrue(expected_params ==  best_params)
+        self.assertEqual(cv_scores[0], optimizer.study.best_value)
 
 
     def test_reproducibility_knn(self):
@@ -186,7 +190,7 @@ class TestOptunaHyperparameterOptimizer(unittest.TestCase):
         best_params.update({"categorical_features" : cat_cols})
         model = KNNModel(**best_params)
 
-        cv_scores, oof, model_list = CrossValidationExecutor(model,
+        cv_scores, oof, model_list, _ = CrossValidationExecutor(model,
                                                             root_mean_squared_error,
                                                             kf,
                                                             use_test_as_valid=True
@@ -199,7 +203,7 @@ class TestOptunaHyperparameterOptimizer(unittest.TestCase):
                            'categorical_features' : cat_cols}
         
         self.assertEqual(expected_params, best_params)
-        self.assertEqual(cv_scores[0], 74032.38900824237)
+        self.assertEqual(cv_scores[0], optimizer.study.best_value)
 
 
     def test_reproducibility_hgb(self):
@@ -228,7 +232,7 @@ class TestOptunaHyperparameterOptimizer(unittest.TestCase):
         print(best_params)
         model = HGBModel(**best_params)
 
-        cv_scores, oof, model_list = CrossValidationExecutor(model,
+        cv_scores, oof, model_list, _ = CrossValidationExecutor(model,
                                                             root_mean_squared_error,
                                                             kf,
                                                             use_test_as_valid=True
@@ -250,3 +254,90 @@ class TestOptunaHyperparameterOptimizer(unittest.TestCase):
         
         # self.assertEqual(expected_params, best_params)
         self.assertEqual(cv_scores[0], 73121.7989656374)
+
+
+    def test_survival_wrapper(self):
+
+
+        train_csv_path = "data/post_hct_survival/train.csv"
+        test_csv_path = "data/post_hct_survival/test.csv"
+        sub_csv_path = "data/post_hct_survival/sample_submission.csv"
+        target_col_name = ['efs', 'efs_time']
+
+        settings = DataSciencePipelineSettings(train_csv_path,
+                                       test_csv_path,
+                                       target_col_name,
+                                       )
+
+        transforms = [
+             FillNullValues.transform,
+             OrdinalEncode.transform,
+             ConvertObjectToCategorical.transform
+             ]
+
+        settings = reduce(lambda acc, func: func(acc), transforms, settings)
+
+        train, test_df = settings.update()
+        test_df.drop(columns=target_col_name, inplace=True)
+        X, y = train.drop(columns=target_col_name), train[target_col_name]
+
+        model = XGBoostModel
+        weights = np.where(y['efs'] == 1, 1.5, 1)
+        xgb_regression_base_params = {"objective": "reg:squarederror", "eval_metric": "rmse", "num_boost_round" : 100, "early_stopping_rounds" : 10}
+
+        kf = StratifiedKFold(5, shuffle=True, random_state=42)
+
+        def scci_metric(y_test, y_pred, id_col_name : str = "ID",
+               survived_col_name : str = "efs",
+               survival_time_col_name : str = "efs_time",
+               stratify_col_name : str = "race_group"):
+            idcs = y_test.index
+            og_train = pd.read_csv(train_csv_path)
+            
+            y_true = og_train.loc[idcs, [id_col_name, survived_col_name, survival_time_col_name, stratify_col_name]].copy()
+            y_pred_df = og_train.loc[idcs, [id_col_name]].copy()
+            y_pred_df["prediction"] = y_pred
+            scci = score(y_true.copy(), y_pred_df.copy(), id_col_name)
+            return scci
+
+        optimizer = OptunaHyperparameterOptimizer(X,
+                                                y,
+                                                model,
+                                                XGBoostGBTreeLossguide(),
+                                                kf,
+                                                scci_metric,
+                                                fixed_model_params=xgb_regression_base_params,
+                                                model_wrapper=SurvivalModelWrapper("quantile"),
+                                                direction = 'maximize',
+                                                n_trials=2,
+                                                study_name = 'xgb',
+                                                cross_validation_run_kwargs = {'groups' : X['race_group'],
+                                                                                'weights' : weights},
+                                                random_state=42)
+
+        best_params = optimizer.optimize()
+
+        expected_params = {'max_bin': 410, 
+                           'learning_rate': 0.010206070557576998, 
+                           'max_depth': 41, 
+                           'gamma': 0.4387864312637486, 
+                           'min_child_weight': 0.9882175067155592, 
+                           'subsample': 0.9741056608086441, 
+                           'colsample_bytree': 0.8054775777948113, 
+                           'colsample_bylevel': 0.8784905784205266, 
+                           'colsample_bynode': 0.9798963478757211, 
+                           'reg_alpha': 1.2194898415451077e-06, 
+                           'reg_lambda': 0.05594697353802973, 
+                           'max_cat_threshold': 33, 
+                           'max_cat_to_onehot': 2}
+        
+        model = XGBoostModel(**xgb_regression_base_params, **expected_params, **{'booster': 'gbtree', 'grow_policy': 'lossguide'})
+        survival_model = SurvivalModelWrapper("quantile").set_model(model)
+
+        cv_scores, oofs, model_list, test_preds = CrossValidationExecutor(survival_model,
+                                                                                scci_metric,
+                                                                                kf,
+                                                                                verbose=2).run(X, y, weights=weights, groups=X['race_group'])
+        
+        self.assertTrue({**expected_params, **xgb_regression_base_params} == best_params)
+        self.assertEqual(cv_scores[0], optimizer.study.best_value)

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from ktools.hyperparameter_optimization.i_sklearn_kfold_object import ISklearnKFoldObject
-from ktools.modelling.Interfaces.i_sklearn_model import ISklearnModel
+from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
 
 
 def create_oofs_from_model(cross_validation_executor,

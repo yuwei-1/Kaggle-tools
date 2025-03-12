@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Union
 from autogluon.tabular import TabularPredictor
 from ktools.hyperparameter_optimization.i_sklearn_kfold_object import ISklearnKFoldObject
 from ktools.modelling.Interfaces.i_automl_wrapper import IAutomlWrapper
+from ktools.modelling.model_transform_wrappers.survival_model_wrapper import SupportedSurvivalTransformation
 from ktools.preprocessing.basic_feature_transformers import *
 
 
@@ -55,7 +56,7 @@ class KToolsAutogluonWrapper(IAutomlWrapper):
     def _model_setup(self):
         kfold_col_name = "fold"
 
-        X, y = self.train_df.drop(columns=self._target_col_name), self.train_df[[self._target_col_name]]
+        X, y = self.train_df.drop(columns=self._target_col_name), self.train_df[self._target_col_name]
         split = self._kfold_object.split(X, y)
         for i, (_, val_index) in enumerate(split):
             self.train_df.loc[val_index, kfold_col_name] = i
@@ -66,6 +67,10 @@ class KToolsAutogluonWrapper(IAutomlWrapper):
                                      groups=kfold_col_name
                                      )
         return predictor
+    
+    def load_model(self, ag_model_path : str):
+        self.model = TabularPredictor.load(ag_model_path)
+        return self
 
     def fit(self):
         self.model = self.model.fit(self.train_df,
@@ -85,3 +90,51 @@ class KToolsAutogluonWrapper(IAutomlWrapper):
             if self._save_predictions: all_y_preds.to_csv(self._oof_save_path)
 
         return all_y_preds
+    
+
+class KToolsSurvivalAutogluon(KToolsAutogluonWrapper):
+
+    def __init__(self,
+                 *args,
+                 transform_string : str = "quantile",
+                 group_col_name : str = "race_group",
+                 times_col : str = "efs_time",
+                 event_col : str = "efs",
+                 **kwargs
+                ) -> None:
+        super().__init__(*args, **kwargs)
+        self._transform_string = transform_string
+        self._group_col_name = group_col_name
+        self._times_col = times_col
+        self._event_col = event_col
+
+    def _data_setup(self):
+        settings = DataSciencePipelineSettings(self._train_csv_path,
+                                               self._test_csv_path,
+                                               self._target_col_name,
+                                               )
+
+        settings = reduce(lambda acc, func: func(acc), self._data_transforms, settings)
+        train_df, test_df = settings.update()
+        if not isinstance(self._target_col_name, list): self._target_col_name = [self._target_col_name]
+        test_df.drop(columns=self._target_col_name, inplace=True)
+        return train_df, test_df
+
+    def _model_setup(self):
+        kfold_col_name = "fold"
+        self.transform = SupportedSurvivalTransformation[self._transform_string.upper()].value
+
+        X, y = self.train_df.drop(columns=self._target_col_name), self.train_df[self._target_col_name]
+        groups = X[self._group_col_name]
+
+        split = self._kfold_object.split(X, groups, groups=groups)
+        for i, (train_index, val_index) in enumerate(split):
+            self.train_df.loc[val_index, kfold_col_name] = i
+
+
+        predictor = TabularPredictor(label=self._target_col_name,
+                                     eval_metric=self._eval_metric,
+                                     problem_type=self._problem_type,
+                                     groups=kfold_col_name
+                                     )
+        return predictor

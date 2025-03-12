@@ -3,10 +3,10 @@ from typing import List, Union
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
-from ktools.modelling.Interfaces.i_sklearn_model import ISklearnModel
+from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
 
 
-class YDFGBoostModel(ISklearnModel):
+class YDFGBoostModel(IKtoolsModel):
 
     target_col = "target"
 

@@ -3,10 +3,10 @@ import pandas as pd
 import math
 from sklearn.model_selection import train_test_split
 from pytorch_tabnet.tab_model import TabNetClassifier, TabNetRegressor
-from ktools.modelling.Interfaces.i_sklearn_model import ISklearnModel
+from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
 
 
-class TabNetModel(ISklearnModel):
+class TabNetModel(IKtoolsModel):
 
     def __init__(self,
                  cat_idcs : List[int],

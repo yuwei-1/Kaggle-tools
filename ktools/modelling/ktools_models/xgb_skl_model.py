@@ -2,11 +2,11 @@ from typing import List
 import pandas as pd
 from sklearn.model_selection import train_test_split
 import xgboost as xgb
-from ktools.modelling.Interfaces.i_sklearn_model import ISklearnModel
+from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
 from xgboost import XGBClassifier, XGBRegressor
 
 
-class XGBoostSKLModel(ISklearnModel):
+class XGBoostSKLModel(IKtoolsModel):
 
     def __init__(self,
                  task = "regression",

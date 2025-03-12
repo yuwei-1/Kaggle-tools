@@ -4,10 +4,10 @@ from sklearn.model_selection import RepeatedKFold, cross_val_score
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import TargetEncoder, StandardScaler
 from sklearn.svm import SVR, SVC
-from ktools.modelling.Interfaces.i_sklearn_model import ISklearnModel
+from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
 
 
-class SVMModel(ISklearnModel):
+class SVMModel(IKtoolsModel):
 
     def __init__(self, 
                  categorical_features, 

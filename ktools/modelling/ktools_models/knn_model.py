@@ -1,10 +1,10 @@
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, TargetEncoder
 from sklearn.neighbors import KNeighborsRegressor, KNeighborsClassifier
-from ktools.modelling.Interfaces.i_sklearn_model import ISklearnModel
+from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
 
 
-class KNNModel(ISklearnModel):
+class KNNModel(IKtoolsModel):
 
     def __init__(self, 
                  categorical_features, 

@@ -106,6 +106,16 @@ class XGBoostDART(BaseXGBoostParamGrid):
         }
         params.update(base_params)
         return params
+
+class XGBoostGBTreeLossguide(BaseXGBoostParamGrid):
+    def get(self, trial : optuna.Trial):
+        base_params = super().get(trial)
+        params = {
+            "booster" : "gbtree",
+            "grow_policy" : "lossguide"
+        }
+        params.update(base_params)
+        return params
     
 
 class BaseCatBoostParamGrid(IModelParamGrid):
@@ -126,7 +136,8 @@ class BaseCatBoostParamGrid(IModelParamGrid):
             "leaf_estimation_iterations" : trial.suggest_int("leaf_estimation_iterations", 1, 5),
             "random_strength" : trial.suggest_float("random_strength", 1, 10),
             "leaf_estimation_method" : trial.suggest_categorical("leaf_estimation_method", ["Newton", "Gradient"]),
-            "use_best_model" : True
+            "use_best_model" : True,
+            "bootstrap_type" : trial.suggest_categorical("bootstrap_type", ["MVS", "Bayesian", "Bernoulli"])
         }
         return params
     

@@ -4,13 +4,14 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import OrdinalEncoder
 from ktools.modelling.ktools_models.catboost_model import CatBoostModel
 from ktools.modelling.ktools_models.hgb_model import HGBModel
 from ktools.modelling.ktools_models.keras_embedding_model import KerasEmbeddingModel
 from ktools.modelling.ktools_models.keras_factorization_machine import KerasFM
 from ktools.modelling.ktools_models.lgbm_model import LGBMModel
-from ktools.modelling.ktools_models.pytorch_ffn_model import PytorchFFNModel
+from ktools.modelling.ktools_models.pytorch_embedding_model import PytorchEmbeddingModel
 from ktools.modelling.ktools_models.tabnet_model import TabNetModel
 from ktools.modelling.ktools_models.xgb_model import XGBoostModel
 from ktools.modelling.ktools_models.yggdrasil_gbt_model import YDFGBoostModel
@@ -183,21 +184,26 @@ class TestModelBinaryClassification(unittest.TestCase):
         self.assertTrue((y_pred <= 1).all())
         self.assertTrue(len(np.unique(y_pred)) > 2)
 
-    def test_pytorch_nn(self):
+    def test_ffn_pytorch_nn(self):
         train_features = list(self.train_df.columns)[:-1]
         oe = OrdinalEncoder()
         self.train_df[train_features] = oe.fit_transform(self.train_df[train_features])
-        cat_sizes = [int(x) for x in self.train_df[train_features].max().values]
+        cat_sizes = [int(x) for x in self.train_df[train_features].nunique().values]
         cat_emb = [int(np.sqrt(x)) for x in cat_sizes]
-        pynn = PytorchFFNModel(len(train_features),
-                               output_dim=1,
-                               categorical_idcs=list(range(len(train_features))),
-                               categorical_sizes=cat_sizes,
-                               categorical_embedding=cat_emb,
-                               activation='gelu',
-                               last_activation='sigmoid',
-                               loss=nn.BCELoss())
+        pynn = PytorchEmbeddingModel(
+                                    "feedforward",
+                                    len(train_features),
+                                    output_dim=1,
+                                    categorical_idcs=list(range(len(train_features))),
+                                    categorical_sizes=cat_sizes,
+                                    categorical_embedding=cat_emb,
+                                    activation='gelu',
+                                    last_activation='sigmoid',
+                                    loss=nn.BCELoss())
         
-        pynn.fit(self.train_df.drop(columns=self.target_col_name), self.train_df[[self.target_col_name]])
 
-        print()
+        X, y = self.train_df.drop(columns=self.target_col_name), self.train_df[[self.target_col_name]]
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        pynn.fit(X_train, y_train)
+        y_pred = pynn.predict(X_test)
+        self.assertTrue(np.allclose(np.array([0.00856145, 0.00076154, 0.6237532 ]), y_pred[:3]))

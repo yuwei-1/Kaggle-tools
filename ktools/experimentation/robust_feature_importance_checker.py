@@ -1,13 +1,13 @@
 from functools import reduce
 import os
 from scipy.stats import ks_2samp
-from typing import Dict, List
+from typing import Any, Dict, List
 from ktools.fitting.cross_validation_executor import CrossValidationExecutor
 from ktools.modelling.ktools_models.catboost_model import CatBoostModel
 from ktools.modelling.ktools_models.lgbm_model import LGBMModel
 from ktools.feature_engineering.interfaces.i_feature_creator import IFeatureCreator
 from ktools.hyperparameter_optimization.i_sklearn_kfold_object import ISklearnKFoldObject
-from ktools.modelling.Interfaces.i_sklearn_model import ISklearnModel
+from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
 from ktools.preprocessing.basic_feature_transformers import *
 from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings
 
@@ -24,7 +24,7 @@ class RobustFeatureImportanceChecker:
                  metric_callable : callable,
                  metric_direction : str = "maximize",
                  model_type : str = 'lgbm',
-                 model_params : Dict = {},
+                 model_params : Dict[str, Any] = {},
                  sqrt_population_size : int = 10,
                  result_path : str = None,
                  initial_transform_list : List[callable] = [FillNullValues.transform,

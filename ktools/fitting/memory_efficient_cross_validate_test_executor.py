@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Tuple, Callable
 import numpy as np
 import pandas as pd
 from copy import deepcopy
-from ktools.modelling.Interfaces.i_sklearn_model import ISklearnModel
+from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
 from ktools.hyperparameter_optimization.i_sklearn_kfold_object import ISklearnKFoldObject
 
 
@@ -11,7 +11,7 @@ from ktools.hyperparameter_optimization.i_sklearn_kfold_object import ISklearnKF
 class MemoryEfficientCrossValidateTestingExecutor:
 
     def __init__(self,
-                 sklearn_model_instance : ISklearnModel,
+                 sklearn_model_instance : IKtoolsModel,
                  evaluation_metric : Callable,
                  kfold_object : ISklearnKFoldObject,
                  use_test_as_valid=True,

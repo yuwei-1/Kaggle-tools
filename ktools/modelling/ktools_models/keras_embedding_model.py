@@ -5,11 +5,11 @@ from keras.api.callbacks import EarlyStopping
 import keras
 from keras import layers, models, Sequential
 from keras import backend as K
-from ktools.modelling.Interfaces.i_sklearn_model import ISklearnModel
+from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
 
 
 
-class KerasEmbeddingModel(ISklearnModel):
+class KerasEmbeddingModel(IKtoolsModel):
 
     def __init__(self,
                  continuous_feature_idcs : List[int],

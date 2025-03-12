@@ -1,6 +1,6 @@
 pandas
-numpy==1.26
-scikit-learn==1.4
+numpy
+scikit-learn
 ipykernel
 matplotlib
 seaborn
@@ -14,9 +14,11 @@ kaggle
 autogluon.tabular
 parameterized
 scipy
-torch
-torchvision
-torchaudio
+torch==2.5.0
+torchvision==0.20.0
+torchaudio==2.5.0
+pytorch-tabular
+pytorch-lightning
 hillclimbers
 pytorch-tabnet
 tensorflow
@@ -26,3 +28,4 @@ lightautoml
 h2o
 flaml
 ydf
+lifelines

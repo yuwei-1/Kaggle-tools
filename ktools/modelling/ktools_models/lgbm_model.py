@@ -1,17 +1,18 @@
 from typing import List
+import numpy as np
 import pandas as pd
 import lightgbm as lgb
 import sys
 
 sys.path.append("/Users/yuwei-1/Documents/projects/Kaggle-tools")
 from lightgbm import early_stopping, log_evaluation
-from ktools.modelling.Interfaces.i_sklearn_model import ISklearnModel
+from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
 from sklearn.model_selection import train_test_split
 
 from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings
 
 
-class LGBMModel(ISklearnModel):
+class LGBMModel(IKtoolsModel):
 
     def __init__(self,
                  num_boost_round=100,
@@ -33,7 +34,7 @@ class LGBMModel(ISklearnModel):
                            ]
         self._random_state = random_state
         
-    def fit(self, X, y, validation_set = None, val_size=0.05):
+    def fit(self, X, y, validation_set = None, val_size=0.05, weights=None):
         if validation_set is None:
             X_train, X_valid, y_train, y_valid = train_test_split(X, 
                                                                   y, 
@@ -43,7 +44,8 @@ class LGBMModel(ISklearnModel):
             X_train, y_train = X, y
             X_valid, y_valid = validation_set
 
-        train_data = lgb.Dataset(X_train, label=y_train)
+        weights = np.ones(y_train.shape[0]) if weights is None else weights
+        train_data = lgb.Dataset(X_train, label=y_train, weight=weights)
         val_data = lgb.Dataset(X_valid, label=y_valid, reference=train_data)
         self.model = lgb.train(self._lgb_param_grid,
                                 train_data,

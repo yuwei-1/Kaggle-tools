@@ -7,12 +7,12 @@ from sklearn.model_selection import train_test_split
 from ktools.fitting.cross_validation_executor import CrossValidationExecutor
 from ktools.hyperparameter_optimization.i_sklearn_kfold_object import ISklearnKFoldObject
 from ktools.modelling.Interfaces.i_automl_wrapper import IAutomlWrapper
-from ktools.modelling.Interfaces.i_sklearn_model import ISklearnModel
+from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
 from ktools.preprocessing.basic_feature_transformers import *
 
 
 
-class FLAMLModel(ISklearnModel):
+class FLAMLModel(IKtoolsModel):
 
     def __init__(self,
                  time_budget : float = 60,
