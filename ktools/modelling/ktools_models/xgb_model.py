@@ -1,9 +1,6 @@
-from collections import defaultdict
 from typing import *
 import numpy as np
-import pandas as pd
 import xgboost as xgb
-from sklearn.model_selection import train_test_split
 from ktools.modelling.base_classes.base_ktools_model import BaseKtoolsModel
 from ktools.modelling.base_classes.joblib_saver_mixin import JoblibSaverMixin
 
@@ -61,7 +58,11 @@ class XGBoostModel(BaseKtoolsModel, JoblibSaverMixin):
         self.is_fitted_ = True
         return self
 
-    def predict(self, X):
+    def predict(self, X : np.ndarray) -> np.ndarray:
         test_data = xgb.DMatrix(X, enable_categorical=True)
         y_pred = self.model.predict(test_data)
         return y_pred
+    
+    @property
+    def num_fitted_models(self):
+        return self.model.num_boosted_rounds()

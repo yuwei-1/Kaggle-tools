@@ -1,61 +1,69 @@
-from typing import List
+from typing import *
 import numpy as np
-import pandas as pd
 import lightgbm as lgb
-import sys
-
-sys.path.append("/Users/yuwei-1/Documents/projects/Kaggle-tools")
-from lightgbm import early_stopping, log_evaluation
 from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
 from sklearn.model_selection import train_test_split
+from ktools.modelling.base_classes.base_ktools_model import BaseKtoolsModel
+from ktools.modelling.base_classes.joblib_saver_mixin import JoblibSaverMixin
 
-from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings
 
-
-class LGBMModel(IKtoolsModel):
+class LGBMModel(BaseKtoolsModel, JoblibSaverMixin):
 
     def __init__(self,
-                 num_boost_round=100,
-                 early_stopping_rounds=20,
-                 random_state=129,
-                 verbose=-1,
-                 n_jobs=1,
-                 **lgb_param_grid,) -> None:
-        super().__init__()
+                 num_boost_round : int = 100,
+                 early_stopping_rounds : Union[int, None] = 20,
+                 random_state : int = 129,
+                 verbose : int = -1,
+                 n_jobs : int = 1,
+                 callbacks : List[Any] = [],
+                 **lgb_param_grid) -> None:
+        
+        super().__init__(random_state, early_stopping_rounds)
         self._num_boost_round = num_boost_round
+        self._verbose = verbose
+        self._n_jobs = n_jobs
+        self._callbacks = callbacks
+
         self._lgb_param_grid = {"verbose" : verbose, 
-                                "early_stopping_rounds" : early_stopping_rounds,
                                 "random_state" : random_state,
                                 "n_jobs" : n_jobs,
                                 **lgb_param_grid}
-        self._callbacks = [
-                            # log_evaluation(period=log_period), 
-                            # early_stopping(stopping_rounds=stopping_rounds)
-                           ]
-        self._random_state = random_state
         
-    def fit(self, X, y, validation_set = None, val_size=0.05, weights=None):
-        if validation_set is None:
-            X_train, X_valid, y_train, y_valid = train_test_split(X, 
-                                                                  y, 
-                                                                  test_size=val_size, 
-                                                                  random_state=self._random_state)
-        else:
-            X_train, y_train = X, y
-            X_valid, y_valid = validation_set
+        self.is_fitted_ = False
+        
+    def fit(self, X: np.ndarray, y: np.ndarray, validation_set: Union[Tuple[np.ndarray, np.ndarray], None] = None, 
+            val_size: float = 0.05, weights: Union[np.ndarray, None] = None) -> "LGBMModel":
+        
+        X_train, X_valid, y_train, y_valid, weights = self.create_validation(X, y, validation_set, weights, val_size)
 
-        weights = np.ones(y_train.shape[0]) if weights is None else weights
         train_data = lgb.Dataset(X_train, label=y_train, weight=weights)
-        val_data = lgb.Dataset(X_valid, label=y_valid, reference=train_data)
-        self.model = lgb.train(self._lgb_param_grid,
-                                train_data,
-                                num_boost_round=self._num_boost_round,
-                                valid_sets=[train_data, val_data],
-                                valid_names=['train', 'valid'],
-                                callbacks=self._callbacks,
-                                )
+        eval_sets = [train_data]
+        eval_names = ["train"]
+        if self._early_stop:
+            val_data = lgb.Dataset(X_valid, label=y_valid, reference=train_data)
+            eval_sets += [val_data]
+            eval_names += ['valid']
+            self._lgb_param_grid['early_stopping_rounds'] = self._early_stopping_rounds
+
+        train_params = {
+            "params" : self._lgb_param_grid,
+            "train_set" : train_data,
+            "num_boost_round" : self._num_boost_round,
+            "valid_sets" : eval_sets,
+            "valid_names" : eval_names,
+            "callbacks" : self._callbacks
+        }
+        
+        self.model = lgb.train(
+            **train_params
+        )
+        self.is_fitted_ = True
         return self
 
-    def predict(self, X):
+    def predict(self, X : np.ndarray) -> np.ndarray:
         y_pred = self.model.predict(X)
         return y_pred
+    
+    @property
+    def num_fitted_models(self):
+        return self.model.num_trees()

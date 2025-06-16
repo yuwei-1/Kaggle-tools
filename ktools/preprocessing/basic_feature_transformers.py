@@ -2,7 +2,7 @@ import numpy as np
 from copy import deepcopy
 import pandas as pd
 from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OrdinalEncoder, StandardScaler, MinMaxScaler
+from sklearn.preprocessing import OrdinalEncoder, StandardScaler, MinMaxScaler, LabelEncoder
 from ktools.preprocessing.i_feature_transformer import IFeatureTransformer
 from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings
 
@@ -120,6 +120,20 @@ class OrdinalEncode(IFeatureTransformer):
         settings.combined_df = pd.concat([train_df, test_df], keys=['train', 'test'])
         settings.combined_df[settings.categorical_col_names] = settings.combined_df[settings.categorical_col_names].astype(int)
         return settings
+    
+class LabelEncode(IFeatureTransformer):
+    @staticmethod
+    def transform(original_settings : DataSciencePipelineSettings):
+        settings = deepcopy(original_settings)
+        train_df, test_df = settings.update()
+        for col in settings.categorical_col_names:
+            label_encoder = LabelEncoder()
+            train_df[col] = label_encoder.fit_transform(train_df[col])
+            test_df[col] = label_encoder.transform(test_df[col])
+        settings.combined_df = pd.concat([train_df, test_df], keys=['train', 'test'])
+        settings.combined_df[settings.categorical_col_names] = settings.combined_df[settings.categorical_col_names].astype(int)
+        return settings
+
 
 class StandardScaleNumerical(IFeatureTransformer):
     @staticmethod

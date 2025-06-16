@@ -31,7 +31,7 @@ class DataSciencePipelineSettings(object):
         train_df = self._smart_drop_index(pd.read_csv(self.train_csv_path) if self.train_data is None else self.train_data)
         test_df = self._smart_drop_index(pd.read_csv(self.test_csv_path) if self.test_data is None else self.test_data)
 
-        if self.original_csv_path is not None:
+        if self.original_csv_path or self.original_data:
             train_df = train_df.assign(source=0)
             test_df = test_df.assign(source=0)
             original_df = self._smart_drop_index(pd.read_csv(self.original_csv_path) if self.original_data is None else self.original_data).assign(source=1)

@@ -28,10 +28,10 @@ class IskanderPairwiseNetwork(nn.Module):
                                                             embedding_projected_dim,
                                                             embedding_projected_dim)
         
-        # self.aux_predictor = NonLinearFeedForwardModule(hidden_size,
-        #                                                 hidden_size//3,
-        #                                                 output_size
-        #                                                 )
+        self.aux_predictor = NonLinearFeedForwardModule(hidden_size,
+                                                        hidden_size//3,
+                                                        output_size
+                                                        )
 
         self.odst = nn.Sequential(
             nn.Dropout(dropout),
@@ -52,8 +52,8 @@ class IskanderPairwiseNetwork(nn.Module):
         x = torch.cat([emb, x_num], dim=1)
         x = self.odst(x)
         risk = self.risk_out(x)
-        # efs_time_pred = self.aux_predictor(x)
-        return risk, x
+        efs_time_pred = self.aux_predictor(x)
+        return risk, efs_time_pred
     
     def data_aware_init(self, dataloader):
         

@@ -14,3 +14,7 @@ class IKtoolsModel(ABC):
     @abstractmethod
     def predict(X):
         pass
+
+    @property
+    def num_fitted_models(self):
+        return None
