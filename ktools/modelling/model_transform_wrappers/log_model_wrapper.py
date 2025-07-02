@@ -9,8 +9,6 @@ class LogModelWrapper(IModelWrapper):
         super().__init__(model)
 
     def fit(self, X, y, *args, validation_set = None, **kwargs):
-        X_valid, y_valid = validation_set
-        
         y = np.log1p(y)
         self.model.fit(X, y, *args, **kwargs)
 

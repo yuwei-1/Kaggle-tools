@@ -3,10 +3,11 @@ from typing import Any, Dict, List, Tuple, Callable, Union
 import numpy as np
 import pandas as pd
 from copy import deepcopy
+from tqdm import tqdm
+import logging
 from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
 from ktools.hyperparameter_optimization.i_sklearn_kfold_object import ISklearnKFoldObject
 from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings
-
 
 
 class SafeCrossValidationExecutor:
@@ -40,6 +41,8 @@ class SafeCrossValidationExecutor:
         self._target_col_name = target_col_name
         self._pipeline_transforms = pipeline_transforms
         self._pipeline_kwargs = pipeline_kwargs
+        logging.basicConfig(level=logging.INFO if verbose <= 1 else logging.CRITICAL)
+        self.logger = logging.getLogger("cross_validation_log")
 
     def _preprocess_train_test(self, train_data : pd.DataFrame, test_data : pd.DataFrame, additional_data : Union[None, pd.DataFrame]):
             
@@ -57,7 +60,10 @@ class SafeCrossValidationExecutor:
     def run(self, train_data : pd.DataFrame, weights=None, test_data=None, groups = None, additional_data : pd.DataFrame = None, local_transform_list=[lambda x : x], output_transform_list=[lambda x : x[-1]]) -> Tuple[Tuple[float], np.ndarray, List[Any]]:
 
         training_features = train_data.columns.tolist() if self._training_features is None else self._training_features
-        train_data.reset_index(drop=True, inplace=True)
+        if self._target_col_name in training_features:
+            training_features.remove(self._target_col_name)
+
+        # train_data.reset_index(drop=True, inplace=True)
 
         if additional_data is not None:
             pd.testing.assert_index_equal(train_data.columns, additional_data.columns, check_exact=True)
@@ -71,24 +77,25 @@ class SafeCrossValidationExecutor:
 
         y = train_data[self._target_col_name]
         groups = y if groups is None else groups
-        weights = np.ones(y.shape[0]) if weights is None else weights
+        weights = pd.Series(np.ones(y.shape[0]) if weights is None else weights, index=train_data.index)
+        test_data = test_data.loc[:, training_features + [self._target_col_name]]
 
-        for i, (train_index, val_index) in enumerate(self._kf.split(train_data, groups, groups=groups)):
+        for i, (train_index, val_index) in tqdm(enumerate(self._kf.split(train_data, groups, groups=groups))):
             
-            X_full_test = train_data.loc[val_index, :]
+            # X_full_test = train_data.loc[val_index, :]
 
-            train_fold = train_data.loc[train_index, training_features]
-            validation_fold = train_data.loc[val_index, training_features]
-            train_weights = weights[train_index]
+            train_fold = train_data.iloc[train_index, :][training_features + [self._target_col_name]]
+            validation_fold = train_data.iloc[val_index, :][training_features + [self._target_col_name]]
 
             X_train, y_train, X_test, y_test = self._preprocess_train_test(train_fold, validation_fold, additional_data=additional_data)
             X_train, y_train = reduce(lambda acc, func: func(acc), local_transform_list, (X_train, y_train))
             validation_set = [X_test, y_test] if self._use_test_as_valid else None
+            train_weights = weights.loc[X_train.index].values
 
             model = deepcopy(self.model).fit(X_train, y_train, validation_set=validation_set, weights=train_weights)
-            model_list += [model]
+            # model_list += [model]
             y_pred = model.predict(X_test)
-            y_pred_processed = reduce(lambda acc, func: func(acc), output_transform_list, (X_full_test.copy(), y_pred))
+            y_pred_processed = y_pred #reduce(lambda acc, func: func(acc), output_transform_list, (X_full_test.copy(), y_pred))
             
             cv_results += [self._evaluation_metric(y_test, deepcopy(y_pred_processed))]
 
@@ -111,11 +118,11 @@ class SafeCrossValidationExecutor:
             oof_predictions[val_index] = y_pred
             metric_predictions[val_index] = y_pred_processed
 
-            if self._verbose > 1:
-                print(f"The CV results of the current fold is {cv_results[-1]}")
+            self.logger.info(f"The CV results of the current fold is {cv_results[-1]}")
 
         if self._refit_on_all_training_for_test:
             X_train, y_train, test_set, _ = self._preprocess_train_test(train_data, test_data, additional_data=additional_data)
+            weights = weights.loc[X_train.index].values
             model = deepcopy(self.model).fit(X_train, y_train, weights=weights)
             test_predictions = model.predict(test_set)
 
@@ -123,10 +130,9 @@ class SafeCrossValidationExecutor:
         mean_cv_score = np.mean(cv_results)
         score_tuple = (oof_score, mean_cv_score)
 
-        if self._verbose > 0:
-            print("#"*100)
-            print("OOF prediction score : ", oof_score)
-            print(f"Mean {self._num_splits}-cv results : {mean_cv_score} +- {np.std(cv_results)}")
-            print("#"*100)
+        print("#"*100)
+        print("OOF prediction score : ", oof_score)
+        print(f"Mean {self._num_splits}-cv results : {mean_cv_score} +- {np.std(cv_results)}")
+        print("#"*100)
 
         return score_tuple, oof_predictions, model_list, test_predictions

@@ -5,7 +5,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OrdinalEncoder, StandardScaler, MinMaxScaler, LabelEncoder
 from ktools.preprocessing.i_feature_transformer import IFeatureTransformer
 from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings
-
+from ktools.utils.reduce_dataframe_usage import reduce_dataframe_size
 
 
 class ConvertToLower(IFeatureTransformer):
@@ -26,6 +26,15 @@ class FillNullValues(IFeatureTransformer):
                 settings.combined_df[col_name] = settings.combined_df[col_name].fillna(numeric_fill)
             else:
                 settings.combined_df[col_name] = settings.combined_df[col_name].fillna(category_fill)
+        return settings
+    
+class FillInfValues(IFeatureTransformer):
+    @staticmethod
+    def transform(original_settings : DataSciencePipelineSettings, pos_inf_fill : float = -2, neg_inf_fill : float = -3):
+        settings = deepcopy(original_settings)
+        for col_name in settings.numerical_col_names:
+            settings.combined_df.loc[settings.combined_df[col_name] == np.inf, col_name] = pos_inf_fill
+            settings.combined_df.loc[settings.combined_df[col_name] == -np.inf, col_name] = neg_inf_fill
         return settings
     
 
@@ -148,7 +157,7 @@ class StandardScaleNumerical(IFeatureTransformer):
         settings.combined_df = pd.concat([train_df, test_df], keys=['train', 'test'])
         return settings
 
-class MinMaxScalerNumerical():
+class MinMaxScalerNumerical(IFeatureTransformer):
     @staticmethod
     def transform(original_settings : DataSciencePipelineSettings):
         settings = deepcopy(original_settings)
@@ -158,4 +167,27 @@ class MinMaxScalerNumerical():
         train_df[num_cols] = scaler.fit_transform(train_df[num_cols])
         test_df[num_cols] = scaler.transform(test_df[num_cols])
         settings.combined_df = pd.concat([train_df, test_df], keys=['train', 'test'])
+        return settings
+    
+class ReduceMemoryUsage(IFeatureTransformer):
+    @staticmethod
+    def transform(original_settings : DataSciencePipelineSettings):
+        settings = deepcopy(original_settings)
+        settings.combined_df = reduce_dataframe_size(settings.combined_df)
+        return settings
+    
+class RemoveTrainTargetOutliers(IFeatureTransformer):
+    @staticmethod
+    def transform(original_settings : DataSciencePipelineSettings,
+                  lq : float = 0.05,
+                  uq : float = 0.95):
+        settings = deepcopy(original_settings)
+        train_df, test_df = settings.update()
+
+        train_labels = train_df[settings.target_col_name]
+        lqr = train_labels.quantile(lq)
+        uqr = train_labels.quantile(uq)
+
+        no_outlier_train = train_df.loc[(train_labels > lqr) & (train_labels < uqr)]
+        settings.combined_df = pd.concat([no_outlier_train, test_df], keys=['train', 'test'])
         return settings
