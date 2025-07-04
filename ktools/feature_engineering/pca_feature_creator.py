@@ -30,7 +30,7 @@ class PCAFeatureCreator:
         pca_test = pca_test[:, mask]
         return pca_train, pca_test, mask.sum()
 
-    def reduce(self, train_data : pd.DataFrame, test_data : pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    def create(self, train_data : pd.DataFrame, test_data : pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame]:
 
         train_features_to_reduce = train_data.loc[:, self._feature_names]
         test_features_to_reduce = test_data.loc[:, self._feature_names]
