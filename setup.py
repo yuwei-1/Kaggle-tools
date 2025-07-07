@@ -4,7 +4,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='ktools',  # Replace with your project's name
-    version='0.0.4',  # Initial release version
+    version='0.0.5',  # Initial release version
     author='Yuwei Zhu',  # Replace with your name or your organization's name
     author_email='yuweizhu29@gmail.com',  # Replace with your email
     description='A repository of tools to use for kaggle competitions',  # Replace with a short description of your project
@@ -12,9 +12,9 @@ setup(
     packages=find_packages(),  # Automatically find all packages in your project
     install_requires=required,  # Use the requirements.txt file to list dependencies
     classifiers=[
-        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.12',
         'License :: OSI Approved :: MIT License',  # Replace with your chosen license
         'Operating System :: OS Independent',
     ],
-    python_requires='>=3.10',  # Specify the Python version compatibility
+    python_requires='>=3.11',  # Specify the Python version compatibility
 )
