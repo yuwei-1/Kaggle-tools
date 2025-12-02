@@ -13,7 +13,7 @@ def reduce_dataframe_size(df : pd.DataFrame,
 
     large_ints = df.select_dtypes(include=['int64'])
     for col in large_ints:
-        df[col] = pd.to_numeric(df[col], downcast='int')
+        df[col] = pd.to_numeric(df[col], downcast='integer')
 
     end_mem = df.memory_usage(deep=True).sum() / bytes_to_kb ** 2
     

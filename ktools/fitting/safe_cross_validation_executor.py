@@ -120,6 +120,8 @@ class SafeCrossValidationExecutor:
 
             self.logger.info(f"The CV results of the current fold is {cv_results[-1]}")
 
+            del model
+
         if self._refit_on_all_training_for_test:
             X_train, y_train, test_set, _ = self._preprocess_train_test(train_data, test_data, additional_data=additional_data)
             weights = weights.loc[X_train.index].values

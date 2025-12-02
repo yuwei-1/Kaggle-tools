@@ -1,7 +1,5 @@
 import optuna
-import joblib
 import pandas as pd
-import numpy as np
 from optuna.samplers import TPESampler
 from typing import *
 from catboost import CatBoostError
@@ -89,10 +87,11 @@ class OptunaHyperparameterOptimizer():
     def _objective(self, trial : optuna.Trial):
         parameters = self._param_grid_getter.get(trial)
 
-        parameters = self._model_wrapper.take_params(parameters)
-        model = self.model(**parameters, **self._fixed_model_params)
         if self._model_wrapper is not None:
             model = self._model_wrapper.set_model(model)
+            parameters = self._model_wrapper.take_params(parameters)
+
+        model = self.model(**parameters, **self._fixed_model_params)
 
         cv_scores, oof, model_list, _ = CrossValidationExecutor(model,
                                                              self._metric,

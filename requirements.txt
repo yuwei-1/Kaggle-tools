@@ -29,3 +29,6 @@ h2o
 flaml
 # ydf
 lifelines
+gpytorch
+shap
+rich

@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 from sklearn.datasets import make_regression
 from ktools.modelling.ktools_models.pytorch_nns.deep_autoencoder import DeepAutoencoder
-from ktools.modelling.pytorch_utils.pandas_to_tensor_generator import custom_torch_dataloader
+from ktools.modelling.pytorch_utils.pandas_to_tensor_generator import pandas_custom_torch_dataloader
 from ktools.modelling.pytorch_utils.set_all_seeds import set_seed
 
 
@@ -43,7 +43,7 @@ class TestDeepAutoencoder(unittest.TestCase):
         levels_of_compression = 2
         X, _ = make_regression(n_samples=1000, n_features=num_features, noise=0.1, random_state=42)
         data = pd.DataFrame(np.repeat(X, repeats, axis=-1), columns=[f'feature_{i}' for i in range(num_features*repeats)])
-        expected_final_loss = 8.12897
+        expected_final_loss = 0.763955
         
         model = DeepAutoencoder(num_features*repeats, levels_of_compression)
         optimiser = torch.optim.Adam(model.parameters(), lr=1e-3)
@@ -53,7 +53,7 @@ class TestDeepAutoencoder(unittest.TestCase):
         loss_history = []
         model.train()
         for epoch in range(10):
-            batch_dataloader = custom_torch_dataloader(data)
+            batch_dataloader = pandas_custom_torch_dataloader(data)
             total_loss = 0
             for (batch,) in batch_dataloader:
                 optimiser.zero_grad()

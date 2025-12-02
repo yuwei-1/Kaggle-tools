@@ -26,8 +26,8 @@ from post_HCT_survival_notebooks.optimization_param_grids import XGBoostGBTreeLo
 class TestOptunaHyperparameterOptimizer(unittest.TestCase):
 
     def setUp(self):
-        train_csv_path = "/Users/yuwei-1/Documents/projects/Kaggle-tools/data/used_car_prices/train.csv"
-        test_csv_path = "/Users/yuwei-1/Documents/projects/Kaggle-tools/data/used_car_prices/test.csv"
+        train_csv_path = "./data/used_car_prices/train.csv"
+        test_csv_path = "./data/used_car_prices/test.csv"
         target_col_name = "price"
 
         settings = DataSciencePipelineSettings(train_csv_path,

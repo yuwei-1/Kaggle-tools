@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.model_selection import KFold
 
 
-def custom_torch_dataloader(*dataframes : pd.DataFrame, 
+def pandas_custom_torch_dataloader(*dataframes : pd.DataFrame, 
                             batch_size : int = 64,
                             shuffle : bool = True,
                             random_state : int = 42):

@@ -23,6 +23,7 @@ class TestDeepFeatureCreator(unittest.TestCase):
         num_features = 8
         repeats = 8
         levels_of_compression = 3
+        expected_final_loss = 4.383719444274902
         X, _ = make_regression(n_samples=1000, n_features=num_features, noise=0.1, random_state=42)
 
         all_feature_names = [f'feature_{i}' for i in range(num_features*repeats)]
@@ -39,3 +40,4 @@ class TestDeepFeatureCreator(unittest.TestCase):
 
         self.assertTrue(result.shape == (500, 64 + 8))
         self.assertTrue((loss_change < 0).all())
+        self.assertAlmostEqual(expected_final_loss, loss_history[-1], places=5)
