@@ -17,17 +17,17 @@ scipy
 torch==2.3.1 
 torchvision==0.18.1 
 torchaudio==2.3.1 
-# pytorch-tabular
-# pytorch-lightning
+pytorch-tabular
+lightning
 hillclimbers
-# pytorch-tabnet
-# tensorflow
+pytorch-tabnet
+tensorflow
 pydot
 openfe
 lightautoml
 h2o
 flaml
-# ydf
+ydf
 lifelines
 gpytorch
 shap

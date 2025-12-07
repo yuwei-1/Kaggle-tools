@@ -1,0 +1,3 @@
+from ktools.visualization.classification.boxplot import plot_professional_boxplot
+from ktools.visualization.classification.cross_tab import plot_cross_tabulation
+from ktools.visualization.classification.violin import plot_professional_violin

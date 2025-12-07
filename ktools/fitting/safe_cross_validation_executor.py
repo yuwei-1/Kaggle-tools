@@ -25,6 +25,7 @@ class SafeCrossValidationExecutor:
                  num_classes = None,
                  verbose=1,
                  pipeline_transforms : List[Callable] = [],
+                 save_models: bool = True,
                  **pipeline_kwargs) -> None:
         
         self.model = sklearn_model_instance
@@ -41,6 +42,7 @@ class SafeCrossValidationExecutor:
         self._target_col_name = target_col_name
         self._pipeline_transforms = pipeline_transforms
         self._pipeline_kwargs = pipeline_kwargs
+        self._save_models = save_models
         logging.basicConfig(level=logging.INFO if verbose <= 1 else logging.CRITICAL)
         self.logger = logging.getLogger("cross_validation_log")
 
@@ -93,7 +95,7 @@ class SafeCrossValidationExecutor:
             train_weights = weights.loc[X_train.index].values
 
             model = deepcopy(self.model).fit(X_train, y_train, validation_set=validation_set, weights=train_weights)
-            # model_list += [model]
+            if self._save_models: model_list += [model]
             y_pred = model.predict(X_test)
             y_pred_processed = y_pred #reduce(lambda acc, func: func(acc), output_transform_list, (X_full_test.copy(), y_pred))
             

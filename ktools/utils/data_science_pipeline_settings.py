@@ -66,7 +66,7 @@ class DataSciencePipelineSettings(object):
         return X, y, X_test, y_test
 
     @staticmethod
-    def _smart_drop_index(df):
+    def _smart_drop_index(df) -> pd.DataFrame:
         try:
             differences = df.iloc[:, 0].diff().dropna()
             if differences.nunique() == 1:

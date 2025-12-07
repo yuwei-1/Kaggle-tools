@@ -1,6 +1,5 @@
 {
     "build": {
-        // Path is relative to the devcontainer.json file.
         "dockerfile": "Dockerfile",
         "context": ".."
     },
@@ -11,11 +10,9 @@
             "ms-python.python",
             "hbenl.vscode-test-explorer",
             "ms-toolsai.jupyter",
-            "ms-toolsai.vscode-jupyter-slideshow",
-            "ms-toolsai.vscode-jupyter-renderers",
-            "ms-toolsai.vscode-jupyter-cell-tags",
             "github.copilot"
         ]
         }
-    }    
+    },
+    "postStartCommand": "echo 'export PYTHONPATH=/workspaces/Kaggle-tools:$PYTHONPATH'"
 }

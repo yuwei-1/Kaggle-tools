@@ -1,11 +1,7 @@
-FROM python:3.12-slim
+FROM ghcr.io/astral-sh/uv:python3.12-trixie
 
 WORKDIR /app
 
-COPY requirements.txt .
+COPY pyproject.toml .
 
-RUN pip install -r requirements.txt
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends libgomp1 && \
-    apt-get install -y git
+RUN uv pip install --system .
