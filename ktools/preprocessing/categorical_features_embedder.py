@@ -3,8 +3,6 @@ from typing import List
 
 
 class SortMainCategories:
-
-
     """
     Convert non-numerical categorical data to ordinal feature.
         df: training dataframe
@@ -15,12 +13,14 @@ class SortMainCategories:
 
     special_value = -1
 
-    def __init__(self, 
-                 df : pd.DataFrame, 
-                 col_names_to_categorize : List, 
-                 cutoff : int,
-                 fill_with_most_likely : bool = False,
-                 verbose : bool = False) -> None:
+    def __init__(
+        self,
+        df: pd.DataFrame,
+        col_names_to_categorize: List,
+        cutoff: int,
+        fill_with_most_likely: bool = False,
+        verbose: bool = False,
+    ) -> None:
         self.df = df
         self.col_names_to_categorize = set(col_names_to_categorize)
         self.cutoff = cutoff
@@ -37,11 +37,13 @@ class SortMainCategories:
                     print(col, self.df[col].value_counts().head(k).index.tolist())
                     print(self.df[col].value_counts().head(k).values)
                 allowed_list = self.df[col].value_counts().head(k).index.tolist()
-                accepted_values[col] = {allowed_list[i] : i for i in range(k)}
+                accepted_values[col] = {allowed_list[i]: i for i in range(k)}
         return accepted_values
 
     def sort(self, dataframe_to_sort):
-        return self.encode_columns(dataframe_to_sort, self.accepted_values, self.special_value)
+        return self.encode_columns(
+            dataframe_to_sort, self.accepted_values, self.special_value
+        )
 
     def encode_columns(self, df, accepted_values, special_value):
         encoded_df = df.copy()
@@ -50,7 +52,7 @@ class SortMainCategories:
                 encoded_df[col] = df[col].map(mapping)
 
                 if self.fill_with_most_likely:
-                    if encoded_df[col].dtype == 'object':
+                    if encoded_df[col].dtype == "object":
                         mode_value = encoded_df[col].mode()[0]
                         encoded_df[col] = encoded_df[col].fillna(mode_value).astype(int)
                     else:

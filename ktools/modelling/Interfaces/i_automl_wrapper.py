@@ -4,27 +4,29 @@ import random
 from typing import Any, List, Union
 import torch
 from abc import ABC, abstractmethod
-from ktools.hyperparameter_optimization.i_sklearn_kfold_object import ISklearnKFoldObject
+from ktools.hyperparameter_optimization.i_sklearn_kfold_object import (
+    ISklearnKFoldObject,
+)
 from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings
 from ktools.preprocessing.basic_feature_transformers import *
 
 
-
 class IAutomlWrapper(ABC):
-
-    def __init__(self,
-                 train_csv_path : str,
-                 test_csv_path : str,
-                 target_col_name : str,
-                 kfold_object : ISklearnKFoldObject,
-                 data_transforms : List[Any] = [FillNullValues.transform,
-                                                ConvertObjectToCategorical.transform],
-                 model_name : Union[str, None] = None,
-                 random_state : int = 42,
-                 save_predictions : bool = True,
-                 save_path : str = ""
-                 ) -> None:
-        
+    def __init__(
+        self,
+        train_csv_path: str,
+        test_csv_path: str,
+        target_col_name: str,
+        kfold_object: ISklearnKFoldObject,
+        data_transforms: List[Any] = [
+            FillNullValues.transform,
+            ConvertObjectToCategorical.transform,
+        ],
+        model_name: Union[str, None] = None,
+        random_state: int = 42,
+        save_predictions: bool = True,
+        save_path: str = "",
+    ) -> None:
         self._train_csv_path = train_csv_path
         self._test_csv_path = test_csv_path
         self._target_col_name = target_col_name
@@ -44,14 +46,16 @@ class IAutomlWrapper(ABC):
         torch.manual_seed(self._random_state)
 
     def _data_setup(self):
-        settings = DataSciencePipelineSettings(self._train_csv_path,
-                                               self._test_csv_path,
-                                               self._target_col_name,
-                                               )
+        settings = DataSciencePipelineSettings(
+            self._train_csv_path,
+            self._test_csv_path,
+            self._target_col_name,
+        )
 
         settings = reduce(lambda acc, func: func(acc), self._data_transforms, settings)
         train_df, test_df = settings.update()
-        if not isinstance(self._target_col_name, list): self._target_col_name = [self._target_col_name]
+        if not isinstance(self._target_col_name, list):
+            self._target_col_name = [self._target_col_name]
         test_df.drop(columns=self._target_col_name, inplace=True)
         return train_df, test_df
 
@@ -64,11 +68,11 @@ class IAutomlWrapper(ABC):
     @abstractmethod
     def _model_setup(self):
         pass
-    
+
     @abstractmethod
     def fit(self):
         pass
-    
+
     @abstractmethod
-    def predict(self, df : Union[pd.DataFrame, None] = None):
+    def predict(self, df: Union[pd.DataFrame, None] = None):
         pass

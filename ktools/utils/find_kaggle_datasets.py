@@ -2,8 +2,8 @@ import os
 import pandas as pd
 
 
-def find_competition_info(dir_path : str = "/kaggle/input/"):
-    for root, dirs, files in os.walk(dir_path):
+def find_competition_info(dir_path):
+    for root, _, files in os.walk(dir_path):
         for file in files:
             file_path = os.path.join(root, file)
             if "train.csv" in file_path:

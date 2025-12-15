@@ -1,12 +1,11 @@
-from copy import deepcopy
-import pandas
 import pandas as pd
 import numpy as np
 from lifelines.utils import concordance_index
-from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings
 
 
-def score(solution: pd.DataFrame, submission: pd.DataFrame, row_id_column_name: str) -> float:
+def score(
+    solution: pd.DataFrame, submission: pd.DataFrame, row_id_column_name: str
+) -> float:
     """
     >>> import pandas as pd
     >>> row_id_column_name = "id"
@@ -19,17 +18,17 @@ def score(solution: pd.DataFrame, submission: pd.DataFrame, row_id_column_name: 
     >>> score(y_true.copy(), y_pred.copy(), row_id_column_name)
     0.75
     """
-    
+
     del solution[row_id_column_name]
     del submission[row_id_column_name]
-    
-    event_label = 'efs'
-    interval_label = 'efs_time'
-    prediction_label = 'prediction'
+
+    event_label = "efs"
+    interval_label = "efs_time"
+    prediction_label = "prediction"
     # Merging solution and submission dfs on ID
     merged_df = pd.concat([solution, submission], axis=1)
     merged_df.reset_index(inplace=True)
-    merged_df_race_dict = dict(merged_df.groupby(['race_group']).groups)
+    merged_df_race_dict = dict(merged_df.groupby(["race_group"]).groups)
     metric_list = []
     for race in merged_df_race_dict.keys():
         # Retrieving values from y_test based on index
@@ -37,22 +36,26 @@ def score(solution: pd.DataFrame, submission: pd.DataFrame, row_id_column_name: 
         merged_df_race = merged_df.iloc[indices]
         # Calculate the concordance index
         c_index_race = concordance_index(
-                        merged_df_race[interval_label],
-                        -merged_df_race[prediction_label],
-                        merged_df_race[event_label])
+            merged_df_race[interval_label],
+            -merged_df_race[prediction_label],
+            merged_df_race[event_label],
+        )
         metric_list.append(c_index_race)
-    return float(np.mean(metric_list)-np.sqrt(np.var(metric_list)))
+    return float(np.mean(metric_list) - np.sqrt(np.var(metric_list)))
 
 
-def scci_score(train_csv_path : str, 
-               y_pred : np.ndarray,
-               id_col_name : str = "ID",
-               survived_col_name : str = "efs",
-               survival_time_col_name : str = "efs_time",
-               stratify_col_name : str = "race_group"):
-
+def scci_score(
+    train_csv_path: str,
+    y_pred: np.ndarray,
+    id_col_name: str = "ID",
+    survived_col_name: str = "efs",
+    survival_time_col_name: str = "efs_time",
+    stratify_col_name: str = "race_group",
+):
     train = pd.read_csv(train_csv_path)
-    y_true = train[[id_col_name, survived_col_name, survival_time_col_name, stratify_col_name]].copy()
+    y_true = train[
+        [id_col_name, survived_col_name, survival_time_col_name, stratify_col_name]
+    ].copy()
     y_pred = train[[id_col_name]].copy()
     y_pred["prediction"] = y_pred
     scci = score(y_true.copy(), y_pred.copy(), id_col_name)

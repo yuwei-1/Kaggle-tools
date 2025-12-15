@@ -12,7 +12,6 @@
 # from ktools.preprocessing.basic_feature_transformers import *
 
 
-
 # class KToolsLAMAWrapper(IAutomlWrapper):
 
 #     def __init__(self,
@@ -48,7 +47,7 @@
 #                          save_predictions,
 #                          save_path
 #                          )
-    
+
 #     def _set_model_name_and_save_paths(self, model_name):
 #         self._model_name = model_name if model_name is not None else '_'.join(self._lama_models[0])
 #         self._oof_save_path = os.path.join(self._save_path, f"{model_name}_lama_oof.csv")
@@ -63,18 +62,18 @@
 #             general_params={"use_algos": self._lama_models})
 
 #         return predictor
-    
+
 #     def fit(self):
 #         X, y = self.train_df.drop(columns=self._target_col_name), self.train_df[[self._target_col_name]]
 #         roles = {'target' : self._target_col_name}
-#         oof_pred = self.model.fit_predict(self.train_df, 
-#                                           roles = roles, 
+#         oof_pred = self.model.fit_predict(self.train_df,
+#                                           roles = roles,
 #                                           verbose = 2,
 #                                           cv_iter=list(self._kfold_object.split(X, y))
 #                                           )
 #         self.oof_pred = pd.Series(oof_pred.data)
 #         return self
-    
+
 #     def predict(self, df : Union[pd.DataFrame, None] = None):
 #         if df is not None:
 #             all_y_preds = self.model.predict(df)

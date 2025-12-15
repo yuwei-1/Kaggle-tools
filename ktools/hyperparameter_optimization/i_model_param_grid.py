@@ -1,8 +1,9 @@
 import optuna
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+
 
 class IModelParamGrid:
     @staticmethod
     @abstractmethod
-    def get(trial : optuna.Trial):
+    def get(trial: optuna.Trial):
         pass

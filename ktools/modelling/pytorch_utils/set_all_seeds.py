@@ -3,8 +3,9 @@ import numpy as np
 import torch
 # import pytorch_lightning as pl
 
-def set_seed(seed=42, device='cpu'):
-    if device == 'cpu':
+
+def set_seed(seed=42, device="cpu"):
+    if device == "cpu":
         deter = True
         print("CUDA backend is now deterministic, only CPU is being used")
     random.seed(seed)

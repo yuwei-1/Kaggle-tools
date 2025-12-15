@@ -5,17 +5,15 @@ import re
 
 
 class CategoricalLabelErrorImputator:
-
-    def __init__(self,
-                 verbose=False
-                 ) -> None:
+    def __init__(self, verbose=False) -> None:
         self._verbose = verbose
 
-    def impute(self,
-               dataframe : pd.DataFrame,
-               col_names_to_impute : List[str],
-               threshold : int = 10):
-        
+    def impute(
+        self,
+        dataframe: pd.DataFrame,
+        col_names_to_impute: List[str],
+        threshold: int = 10,
+    ):
         for col_name in col_names_to_impute:
             relabeller = {}
             dataframe.loc[:, col_name] = dataframe[col_name].str.lower()
@@ -27,14 +25,18 @@ class CategoricalLabelErrorImputator:
 
             for val in unique_values[~above_threshold]:
                 try:
-                    extracted_components = np.array(re.split(r'\W+', val))
-                    found_idcs = np.where(np.isin(valid_classes, extracted_components))[0]
+                    extracted_components = np.array(re.split(r"\W+", val))
+                    found_idcs = np.where(np.isin(valid_classes, extracted_components))[
+                        0
+                    ]
                     if found_idcs.size > 0:
                         relabeller[val] = valid_classes[found_idcs[0]]
                 except:
                     continue
             if self._verbose:
                 print("(original : new category)", relabeller)
-            dataframe.loc[:, col_name] = dataframe[col_name].map(lambda x: relabeller.get(x, x))
+            dataframe.loc[:, col_name] = dataframe[col_name].map(
+                lambda x: relabeller.get(x, x)
+            )
 
         return dataframe

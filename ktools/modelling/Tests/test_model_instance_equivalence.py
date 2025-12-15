@@ -4,13 +4,11 @@ import pandas as pd
 from ktools.modelling.ktools_models.xgb_model import XGBoostModel
 
 
-
 class TestModelInstanceEquivalence(unittest.TestCase):
-
     def setUp(self) -> None:
         np.random.seed(0)
         self.X = pd.DataFrame(columns=["A", "B"], data=np.random.randn(100, 2))
-        self.y = pd.DataFrame(columns=["C"], data=(self.X["A"]**2 + self.X["B"]))
+        self.y = pd.DataFrame(columns=["C"], data=(self.X["A"] ** 2 + self.X["B"]))
 
     def test_xgb_model_equivalence(self):
         xgb_model = XGBoostModel()

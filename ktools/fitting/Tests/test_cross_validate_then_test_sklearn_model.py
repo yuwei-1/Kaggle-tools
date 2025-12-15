@@ -7,7 +7,6 @@
 # from ktools.fitting.cross_validate_then_test_sklearn_model import CrossValidateTestSklearnModel
 
 
-
 # class TestCrossValidateTestSklearnModel(unittest.TestCase):
 
 #     def setUp(self):
@@ -32,12 +31,12 @@
 #                                                        num_splits)
 
 #     def test_evaluate(self):
-        
+
 #         model, cv_scores, test_scores = self.eval_tool.evaluate(self.X_train,
 #                                                                 self.y_train,
 #                                                                 self.X_test,
 #                                                                 self.y_test)
-        
+
 #         self.assertIsInstance(model, LinearRegression)
 #         self.assertTrue(np.allclose(np.array([-0.077,
 #                                               0.601,

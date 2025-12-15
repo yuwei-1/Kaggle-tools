@@ -4,11 +4,10 @@ from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
 
 
 class LogModelWrapper(IModelWrapper):
-
     def __init__(self, model: IKtoolsModel) -> None:
         super().__init__(model)
 
-    def fit(self, X, y, *args, validation_set = None, **kwargs):
+    def fit(self, X, y, *args, validation_set=None, **kwargs):
         y = np.log1p(y)
         self.model.fit(X, y, *args, **kwargs)
 

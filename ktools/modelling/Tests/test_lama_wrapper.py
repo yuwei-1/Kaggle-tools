@@ -1,8 +1,7 @@
 # import unittest
-# import pandas as pd    
+# import pandas as pd
 # from sklearn.model_selection import KFold
 # from ktools.modelling.Automl_models.lama_model import KToolsLAMAWrapper
-
 
 
 # class TestKToolsLAMAWrapper(unittest.TestCase):
@@ -22,5 +21,5 @@
 #                                                 save_predictions=True,
 #                                                 save_path="./ktools/modelling/Tests/TestData"
 #                                                 ).fit()
-        
+
 #         oof_pred = ktools_lama_wrapper.predict()

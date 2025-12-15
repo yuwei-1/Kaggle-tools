@@ -35,7 +35,7 @@
 
 #     def __getitem__(self, idx):
 #         return self.X[idx], self.y[idx]
-    
+
 
 # def prep_torch_dataset(X, y, batch_size):
 #     torch_dataset = MyDataset(X, y)
@@ -49,7 +49,7 @@
 
 
 # class PytorchEmbeddingModel(IKtoolsModel):
-    
+
 #     def __init__(self,
 #                  model_string : str,
 #                  input_dim : int,
@@ -71,7 +71,7 @@
 #                  random_state : int = 42,
 #                  verbose : int = 1,
 #                  **model_kwargs) -> None:
-        
+
 #         set_seed(random_state)
 #         model_cls = SupportedPytorchEmbeddingModels[model_string.upper()].value
 #         self.model = model_cls(input_dim,
@@ -94,20 +94,20 @@
 #         self._patience = patience
 #         self._random_state = random_state
 #         self._verbose = verbose
-        
+
 #     def initialize_weights(self):
 #         for module in self.model.modules():
 #             if isinstance(module, nn.Linear):
 #                 nn.init.xavier_uniform_(module.weight)
 #                 if module.bias is not None:
 #                     nn.init.zeros_(module.bias)
-        
+
 #     def fit(self, X, y, validation_set = None, val_size=0.05):
 
 #         if validation_set is None:
-#             X_train, X_valid, y_train, y_valid = train_test_split(X, 
-#                                                                   y, 
-#                                                                   test_size=val_size, 
+#             X_train, X_valid, y_train, y_valid = train_test_split(X,
+#                                                                   y,
+#                                                                   test_size=val_size,
 #                                                                   random_state=self._random_state)
 #         else:
 #             X_train, y_train = X, y
@@ -146,14 +146,14 @@
 #                 best_score = self._maximise * value
 #                 best_epoch = epoch
 #                 model_state_dicts[epoch] = copy.deepcopy(self.model.state_dict())
-                
+
 #             if (epoch >= best_epoch + self._patience) or (epoch == self._epochs-1):
 #                 print(f"Restoring weights at epoch {best_epoch}, score: {self._maximise * best_score}")
 #                 self.model.load_state_dict(model_state_dicts[best_epoch])
 #                 break
 
 #         return self
-        
+
 #     def _to_tensor(self, X):
 #         X = torch.tensor(X.to_numpy(), dtype=torch.float32)
 #         return X
