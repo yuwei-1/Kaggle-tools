@@ -25,3 +25,10 @@ models
 /build
 /dist
 **/lightning_logs/*
+lightning_logs/
+lb_cv_tables/
+
+**/mlflow.db
+mlruns/
+
+**/.env
