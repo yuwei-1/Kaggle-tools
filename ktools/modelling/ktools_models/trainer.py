@@ -5,10 +5,10 @@ from ktools.fitting.cross_validation_executor import CrossValidationExecutor
 from ktools.hyperparameter_optimization.i_sklearn_kfold_object import (
     ISklearnKFoldObject,
 )
-from ktools.modelling.ktools_models.catboost_model import CatBoostModel
+from ktools.models import CatBoostModel
 from ktools.modelling.ktools_models.hgb_model import HGBModel
-from ktools.modelling.ktools_models.lgbm_model import LGBMModel
-from ktools.modelling.ktools_models.xgb_model import XGBoostModel
+from ktools.models import LGBMModel
+from ktools.models import XGBoostModel
 from ktools.modelling.ktools_models.yggdrasil_gbt_model import YDFGBoostModel
 from ktools.preprocessing.basic_feature_transformers import *
 from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings

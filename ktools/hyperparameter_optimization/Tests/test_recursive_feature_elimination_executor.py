@@ -5,7 +5,7 @@ from ktools.fitting.cross_validation_executor import CrossValidationExecutor
 from ktools.hyperparameter_optimization.recursive_feature_elimination_executor import (
     RecursiveFeatureEliminationExecutor,
 )
-from ktools.modelling.ktools_models.lgbm_model import LGBMModel
+from ktools.models import LGBMModel
 from ktools.preprocessing.basic_feature_transformers import FillNullValues
 from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings
 

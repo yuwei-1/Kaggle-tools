@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 import pandas as pd
-from ktools.modelling.ktools_models.xgb_model import XGBoostModel
+from ktools.models import XGBoostModel
 
 
 class TestModelInstanceEquivalence(unittest.TestCase):

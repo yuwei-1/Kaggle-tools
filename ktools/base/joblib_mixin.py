@@ -1,7 +1,7 @@
 import joblib
 
 
-class JoblibSaverMixin:
+class JoblibSaveMixin:
     model = None
 
     def __init__(self) -> None:

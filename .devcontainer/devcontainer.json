@@ -5,14 +5,16 @@
     },
     "customizations": {
         "vscode": {
-          "settings": {},
+          "settings": {
+            "python.defaultInterpreterPath": "/workspaces/.venv/bin/python"
+          },
           "extensions": [
             "ms-python.python",
             "hbenl.vscode-test-explorer",
             "ms-toolsai.jupyter",
             "github.copilot"
-        ]
+          ]
         }
     },
-    "postStartCommand": "echo 'export PYTHONPATH=/workspaces/Kaggle-tools:$PYTHONPATH'"
+    "postCreateCommand": "./scripts/update-env.sh ${containerWorkspaceFolder}"
 }

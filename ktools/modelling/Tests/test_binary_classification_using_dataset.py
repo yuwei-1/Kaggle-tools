@@ -7,11 +7,11 @@ from xgboost import XGBClassifier
 from catboost import CatBoostClassifier
 from lightgbm import LGBMClassifier
 from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
-from ktools.modelling.ktools_models.catboost_model import CatBoostModel
-from ktools.modelling.ktools_models.lgbm_model import LGBMModel
+from ktools.models import CatBoostModel
+from ktools.models import LGBMModel
 from ktools.preprocessing.basic_feature_transformers import *
 from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings
-from ktools.modelling.ktools_models.xgb_model import XGBoostModel
+from ktools.models import XGBoostModel
 
 
 class TestKtoolsBinaryClassificationUsingDataset(unittest.TestCase):

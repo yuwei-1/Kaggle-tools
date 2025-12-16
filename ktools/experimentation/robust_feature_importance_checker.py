@@ -3,8 +3,8 @@ import os
 from scipy.stats import ks_2samp
 from typing import Any, Dict, List
 from ktools.fitting.cross_validation_executor import CrossValidationExecutor
-from ktools.modelling.ktools_models.catboost_model import CatBoostModel
-from ktools.modelling.ktools_models.lgbm_model import LGBMModel
+from ktools.models import CatBoostModel
+from ktools.models import LGBMModel
 from ktools.preprocessing.basic_feature_transformers import *
 from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings
 

@@ -1,11 +1,22 @@
+from enum import Enum
 from typing import *
 import numpy as np
 import lightgbm as lgb
-from ktools.modelling.base_classes.base_ktools_model import BaseKtoolsModel
-from ktools.modelling.base_classes.joblib_saver_mixin import JoblibSaverMixin
+import pandas as pd
+from ktools.base import BaseKtoolsModel, JoblibSaveMixin
+from ktools.utils.helpers import infer_task
 
 
-class LGBMModel(BaseKtoolsModel, JoblibSaverMixin):
+T = Union[np.ndarray, pd.DataFrame]
+
+
+class DefaultObjective(Enum):
+    regression = "regression"
+    binary_classification = "binary"
+    multiclass_classification = "multiclass"
+
+
+class LGBMModel(BaseKtoolsModel, JoblibSaveMixin):
     def __init__(
         self,
         num_boost_round: int = 100,
@@ -16,11 +27,12 @@ class LGBMModel(BaseKtoolsModel, JoblibSaverMixin):
         callbacks: List[Any] = [],
         **lgb_param_grid,
     ) -> None:
-        super().__init__(random_state, early_stopping_rounds)
+        super().__init__()
         self._num_boost_round = num_boost_round
         self._verbose = verbose
         self._n_jobs = n_jobs
         self._callbacks = callbacks
+        self.early_stopping_rounds = early_stopping_rounds
 
         self._lgb_param_grid = {
             "verbose": verbose,
@@ -29,28 +41,28 @@ class LGBMModel(BaseKtoolsModel, JoblibSaverMixin):
             **lgb_param_grid,
         }
 
-        self.is_fitted_ = False
-
     def fit(
         self,
-        X: np.ndarray,
-        y: np.ndarray,
-        validation_set: Union[Tuple[np.ndarray, np.ndarray], None] = None,
-        val_size: float = 0.05,
-        weights: Union[np.ndarray, None] = None,
+        X: T,
+        y: T,
+        validation_set: Optional[Tuple[T, T]] = None,
+        weights: Optional[T] = None,
     ) -> "LGBMModel":
-        X_train, X_valid, y_train, y_valid, weights = self.create_validation(
-            X, y, validation_set, weights, val_size
-        )
+        if "objective" not in self._lgb_param_grid:
+            task_id = infer_task(y)
+            self._lgb_param_grid["objective"] = DefaultObjective[task_id].value
+            if task_id == "multiclass_classification":
+                self._lgb_param_grid["num_class"] = np.unique(y).shape[0]
 
-        train_data = lgb.Dataset(X_train, label=y_train, weight=weights)
+        train_data = lgb.Dataset(X, label=y, weight=weights)
         eval_sets = [train_data]
         eval_names = ["train"]
-        if self._early_stop:
-            val_data = lgb.Dataset(X_valid, label=y_valid, reference=train_data)
+        if validation_set is not None:
+            X_val, y_val = validation_set
+            val_data = lgb.Dataset(X_val, label=y_val, reference=train_data)
             eval_sets += [val_data]
             eval_names += ["valid"]
-            self._lgb_param_grid["early_stopping_rounds"] = self._early_stopping_rounds
+            self._lgb_param_grid["early_stopping_rounds"] = self.early_stopping_rounds
 
         train_params = {
             "params": self._lgb_param_grid,
@@ -62,13 +74,9 @@ class LGBMModel(BaseKtoolsModel, JoblibSaverMixin):
         }
 
         self.model = lgb.train(**train_params)
-        self.is_fitted_ = True
+        self._fitted = True
         return self
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
+    def predict(self, X: T) -> np.ndarray:
         y_pred = self.model.predict(X)
         return y_pred
-
-    @property
-    def num_fitted_models(self):
-        return self.model.num_trees()

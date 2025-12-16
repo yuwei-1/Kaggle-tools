@@ -6,9 +6,9 @@ import pandas as pd
 from sklearn.model_selection import KFold
 
 sys.path.append("/Users/yuwei-1/Documents/projects/Kaggle-tools")
-from ktools.modelling.ktools_models.catboost_model import CatBoostModel
-from ktools.modelling.ktools_models.lgbm_model import LGBMModel
-from ktools.modelling.ktools_models.xgb_model import XGBoostModel
+from ktools.models import CatBoostModel
+from ktools.models import LGBMModel
+from ktools.models import XGBoostModel
 from sklearn.metrics import root_mean_squared_error
 
 

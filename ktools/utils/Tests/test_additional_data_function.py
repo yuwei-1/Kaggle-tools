@@ -6,7 +6,7 @@ from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import StratifiedKFold
 from ktools.fitting.cross_validation_executor import CrossValidationExecutor
 from ktools.modelling.create_oof_from_model import create_oofs_from_model
-from ktools.modelling.ktools_models.lgbm_model import LGBMModel
+from ktools.models import LGBMModel
 from ktools.preprocessing.basic_feature_transformers import (
     ConvertObjectToCategorical,
     FillNullValues,

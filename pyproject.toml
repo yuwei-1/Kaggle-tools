@@ -1,7 +1,7 @@
 [project]
 name = "kaggle-tools"
-version = "0.1.0"
-description = "Add your description here"
+version = "0.0.5"
+description = "A repository of tools to use for kaggle competitions"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -38,6 +38,8 @@ dependencies = [
     "xgboost>=2.1.4",
     "ipywidgets==8.1.8",
     "kaleido==0.2.1",
-    "mlflow",
-    "pre-commit"
+    "mlflow>=3.7.0",
+    "pre-commit>=4.5.0",
+    "pyfiglet>=1.0.4",
+    "pip>=25.3",
 ]

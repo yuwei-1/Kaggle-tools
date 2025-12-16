@@ -3,7 +3,7 @@
 
 # pycache
 *.pyc
-/__pycache__
+__pycache__
 
 # vscode
 *.vscode
@@ -17,9 +17,6 @@
 *.csv
 *.pkl
 
-# saved models
-models
-
 # dist files
 /ktools.egg-info/
 /build
@@ -32,3 +29,5 @@ lb_cv_tables/
 mlruns/
 
 **/.env
+
+.venv

@@ -16,11 +16,11 @@ from ktools.hyperparameter_optimization.model_param_grids import (
 from ktools.hyperparameter_optimization.optuna_hyperparameter_optimizer import (
     OptunaHyperparameterOptimizer,
 )
-from ktools.modelling.ktools_models.catboost_model import CatBoostModel
+from ktools.models import CatBoostModel
 from ktools.modelling.ktools_models.hgb_model import HGBModel
 from ktools.modelling.ktools_models.knn_model import KNNModel
-from ktools.modelling.ktools_models.lgbm_model import LGBMModel
-from ktools.modelling.ktools_models.xgb_model import XGBoostModel
+from ktools.models import LGBMModel
+from ktools.models import XGBoostModel
 from ktools.modelling.model_transform_wrappers.survival_model_wrapper import (
     SurvivalModelWrapper,
 )

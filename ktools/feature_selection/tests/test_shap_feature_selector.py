@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from sklearn.datasets import make_regression
 from ktools.feature_selection.shap_feature_selector import SHAPFeatureSelector
-from ktools.modelling.ktools_models.xgb_model import XGBoostModel
+from ktools.models import XGBoostModel
 
 
 class TestSHAPFeatureSelector(unittest.TestCase):

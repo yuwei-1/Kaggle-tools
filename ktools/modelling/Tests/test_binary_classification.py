@@ -6,9 +6,9 @@ from sklearn.metrics import accuracy_score
 from parameterized import parameterized
 from sklearn.model_selection import train_test_split
 from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
-from ktools.modelling.ktools_models.catboost_model import CatBoostModel
-from ktools.modelling.ktools_models.lgbm_model import LGBMModel
-from ktools.modelling.ktools_models.xgb_model import XGBoostModel
+from ktools.models import CatBoostModel
+from ktools.models import LGBMModel
+from ktools.models import XGBoostModel
 
 
 class TestKtoolsBinaryClassification(unittest.TestCase):

@@ -1,7 +1,7 @@
 FROM ghcr.io/astral-sh/uv:python3.12-trixie
 
-WORKDIR /app
+WORKDIR /workspaces/
 
 COPY pyproject.toml .
 
-RUN uv pip install --system .
+RUN uv sync

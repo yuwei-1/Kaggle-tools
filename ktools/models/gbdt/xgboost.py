@@ -1,11 +1,23 @@
+from enum import Enum
 from typing import *
 import numpy as np
+import pandas as pd
 import xgboost as xgb
-from ktools.modelling.base_classes.base_ktools_model import BaseKtoolsModel
-from ktools.modelling.base_classes.joblib_saver_mixin import JoblibSaverMixin
+from ktools.base.model import BaseKtoolsModel
+from ktools.base.joblib_mixin import JoblibSaveMixin
+from ktools.utils.helpers import infer_task
 
 
-class XGBoostModel(BaseKtoolsModel, JoblibSaverMixin):
+T = Union[np.ndarray, pd.DataFrame]
+
+
+class DefaultObjective(Enum):
+    regression = "reg:squarederror"
+    binary_classification = "binary:logistic"
+    multiclass_classification = "multi:softprob"
+
+
+class XGBoostModel(BaseKtoolsModel, JoblibSaveMixin):
     def __init__(
         self,
         eval_verbosity: bool = False,
@@ -16,11 +28,12 @@ class XGBoostModel(BaseKtoolsModel, JoblibSaverMixin):
         n_jobs: int = 1,
         **xgb_param_grid,
     ) -> None:
-        super().__init__(random_state, early_stopping_rounds)
+        super().__init__()
         self._eval_verbosity = eval_verbosity
         self._num_boost_round = num_boost_round
         self._verbosity = verbosity
         self._n_jobs = n_jobs
+        self._early_stopping_rounds = early_stopping_rounds
 
         self._xgb_param_grid = {
             "verbosity": verbosity,
@@ -28,27 +41,26 @@ class XGBoostModel(BaseKtoolsModel, JoblibSaverMixin):
             "n_jobs": n_jobs,
             **xgb_param_grid,
         }
-        self.is_fitted_ = False
 
     def fit(
         self,
-        X: np.ndarray,
-        y: np.ndarray,
-        validation_set: Union[Tuple[np.ndarray, np.ndarray], None] = None,
-        val_size: float = 0.05,
-        weights: Union[np.ndarray, None] = None,
+        X: T,
+        y: T,
+        validation_set: Optional[Tuple[T, T]] = None,
+        weights: Optional[T] = None,
     ) -> "XGBoostModel":
-        X_train, X_valid, y_train, y_valid, weights = self.create_validation(
-            X, y, validation_set, weights, val_size
-        )
-
         train_params = {}
-        train_data = xgb.DMatrix(
-            X_train, label=y_train, enable_categorical=True, weight=weights
-        )
+        if "objective" not in self._xgb_param_grid:
+            task_id = infer_task(y)
+            self._xgb_param_grid["objective"] = DefaultObjective[task_id].value
+            if task_id == "multiclass_classification":
+                self._xgb_param_grid["num_class"] = np.unique(y).shape[0]
+
+        train_data = xgb.DMatrix(X, label=y, enable_categorical=True, weight=weights)
         eval_data = [(train_data, "train")]
-        if self._early_stop:
-            valid_data = xgb.DMatrix(X_valid, label=y_valid, enable_categorical=True)
+        if validation_set is not None:
+            X_val, y_val = validation_set
+            valid_data = xgb.DMatrix(X_val, label=y_val, enable_categorical=True)
             eval_data += [(valid_data, "eval")]
             train_params["early_stopping_rounds"] = self._early_stopping_rounds
 
@@ -62,14 +74,10 @@ class XGBoostModel(BaseKtoolsModel, JoblibSaverMixin):
         }
 
         self.model = xgb.train(**train_params)
-        self.is_fitted_ = True
+        self._fitted = True
         return self
 
-    def predict(self, X: np.ndarray) -> np.ndarray:
+    def predict(self, X: T) -> np.ndarray:
         test_data = xgb.DMatrix(X, enable_categorical=True)
         y_pred = self.model.predict(test_data)
         return y_pred
-
-    @property
-    def num_fitted_models(self):
-        return self.model.num_boosted_rounds()

@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.metrics import root_mean_squared_error
 from sklearn.model_selection import KFold
 from ktools.fitting.cross_validation_executor import CrossValidationExecutor
-from ktools.modelling.ktools_models.lgbm_model import LGBMModel
+from ktools.models import LGBMModel
 from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings
 
 
