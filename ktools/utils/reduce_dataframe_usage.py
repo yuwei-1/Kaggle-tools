@@ -1,7 +1,8 @@
 import pandas as pd
+from ktools import logger
 
 
-def reduce_dataframe_size(df: pd.DataFrame, verbose: bool = False) -> pd.DataFrame:
+def reduce_dataframe_size(df: pd.DataFrame) -> pd.DataFrame:
     bytes_to_kb = 1024
     start_mem = df.memory_usage(deep=True).sum() / bytes_to_kb**2
 
@@ -15,8 +16,7 @@ def reduce_dataframe_size(df: pd.DataFrame, verbose: bool = False) -> pd.DataFra
 
     end_mem = df.memory_usage(deep=True).sum() / bytes_to_kb**2
 
-    if verbose:
-        print(f"Initial memory usage: {start_mem:.2f} MB")
-        print(f"Reduced memory usage: {end_mem:.2f} MB")
-        print(f"Memory reduced by: {(start_mem - end_mem) / start_mem * 100:.1f}%")
+    logger.info(f"Initial memory usage: {start_mem:.2f} MB")
+    logger.info(f"Reduced memory usage: {end_mem:.2f} MB")
+    logger.info(f"Memory reduced by: {(start_mem - end_mem) / start_mem * 100:.1f}%")
     return df

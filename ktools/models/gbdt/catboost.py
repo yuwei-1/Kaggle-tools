@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import *
+from typing import Any, Dict, Union, Optional, Tuple
 import numpy as np
 import catboost as cat
 from catboost import Pool
@@ -18,18 +18,18 @@ class DefaultObjective(Enum):
 
 
 class CatBoostModel(BaseKtoolsModel, JoblibSaveMixin):
-    _classifier: bool = False
-
     def __init__(
         self,
         num_boost_round: int = 100,
-        early_stopping_rounds: Union[int, None] = 20,
+        early_stopping_rounds: Optional[int] = 20,
         random_state: int = 129,
         verbose: bool = False,
         allow_writing_files: bool = False,
         **catboost_params,
     ) -> None:
         super().__init__()
+        self.model: Union[cat.CatBoost, None] = None
+        self._classifier: bool = False
         self._num_boost_round = num_boost_round
         self._verbose = verbose
         self._allow_writing_files = allow_writing_files
@@ -59,7 +59,7 @@ class CatBoostModel(BaseKtoolsModel, JoblibSaveMixin):
             if isinstance(X, pd.DataFrame)
             else []
         )
-        train_params = {"eval_set": None}
+        train_params: Dict[Any, Any] = {"eval_set": None}
         train_pool = Pool(
             data=X, label=y, cat_features=self.cat_col_names, weight=weights
         )
@@ -81,9 +81,11 @@ class CatBoostModel(BaseKtoolsModel, JoblibSaveMixin):
         return self
 
     def predict(self, X: T) -> np.ndarray:
+        if self.model is None:
+            raise ValueError("Model is not fitted yet. Please call 'fit' first.")
         test_pool = Pool(data=X, cat_features=self.cat_col_names)
         if self._classifier:
-            y_pred = self.model.predict(test_pool, prediction_type="Probability")
+            y_pred = self.model.predict(test_pool, prediction_type="Probability")[:, 1]
         else:
             y_pred = self.model.predict(test_pool)
         return y_pred

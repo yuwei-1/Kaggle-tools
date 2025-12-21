@@ -1,5 +1,5 @@
 import numpy as np
-from typing import *
+from typing import Union, Optional, Tuple
 from abc import ABC, abstractmethod
 import pandas as pd
 
@@ -8,10 +8,9 @@ T = Union[np.ndarray, pd.DataFrame]
 
 
 class BaseKtoolsModel(ABC):
-    _fitted = False
-
     def __init__(self) -> None:
-        pass
+        self._fitted = False
+        self.model = None
 
     # def create_validation(
     #     self,
