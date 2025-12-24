@@ -19,7 +19,7 @@ Integration test for model pipeline class
 
 DATA_PATH = Path("./data/diabetes_prediction/")
 TARGET = "diagnosed_diabetes"
-EXPECTED_ROC_AUC = 0.7220138352252929
+EXPECTED_ROC_AUC = 0.7221312966927544
 OUT_TYPE = Tuple[DatasetConfig, pd.DataFrame, pd.DataFrame]
 
 

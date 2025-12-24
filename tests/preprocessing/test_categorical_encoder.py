@@ -60,9 +60,10 @@ def test_categorical_encoder(dummy_data: pd.DataFrame):
         err_msg="encoded validation data does not match expected values",
     )
 
-    assert train_data_encoded.dtypes.tolist() == [np.int64, np.int64], (
-        "expected encoded training data to be of integer dtype"
-    )
+    assert train_data_encoded.dtypes.tolist() == [
+        pd.CategoricalDtype(categories=[0, 1, 2, 3], ordered=False),
+        pd.CategoricalDtype(categories=[-1, 0, 1, 2], ordered=False),
+    ], "expected encoded training data to be of integer dtype"
 
 
 def test_categorical_encoder_load_save(tmp_path, dummy_data: pd.DataFrame):

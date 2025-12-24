@@ -29,7 +29,7 @@ class CatBoostModel(BaseKtoolsModel, JoblibSaveMixin):
     ) -> None:
         super().__init__()
         self.model: Union[cat.CatBoost, None] = None
-        self._classifier: bool = False
+        self._task: bool = False
         self._num_boost_round = num_boost_round
         self._verbose = verbose
         self._allow_writing_files = allow_writing_files
@@ -50,7 +50,7 @@ class CatBoostModel(BaseKtoolsModel, JoblibSaveMixin):
         weights: Optional[T] = None,
     ) -> "CatBoostModel":
         task_id = infer_task(y)
-        self._classifier = task_id != "regression"
+        self._task = task_id
         if "loss_function" not in self._catboost_params:
             self._catboost_params["loss_function"] = DefaultObjective[task_id].value
 
@@ -84,8 +84,10 @@ class CatBoostModel(BaseKtoolsModel, JoblibSaveMixin):
         if self.model is None:
             raise ValueError("Model is not fitted yet. Please call 'fit' first.")
         test_pool = Pool(data=X, cat_features=self.cat_col_names)
-        if self._classifier:
+        if self._task == "binary_classification":
             y_pred = self.model.predict(test_pool, prediction_type="Probability")[:, 1]
+        elif self._task == "multiclass_classification":
+            y_pred = self.model.predict(test_pool, prediction_type="Probability")
         else:
             y_pred = self.model.predict(test_pool)
         return y_pred

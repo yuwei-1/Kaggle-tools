@@ -41,7 +41,9 @@ class CategoricalEncoder(BasePreprocessor):
         copy[self.config.categorical_col_names] = self.encoder.transform(
             copy[self.config.categorical_col_names]
         ).astype(int)
-        copy[self.config.categorical_col_names] = copy[
-            self.config.categorical_col_names
-        ].where(~mask, self.encode_missing_value)
+        copy[self.config.categorical_col_names] = (
+            copy[self.config.categorical_col_names]
+            .where(~mask, self.encode_missing_value)
+            .astype("category")
+        )
         return copy

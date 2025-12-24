@@ -85,6 +85,10 @@ def test_binary_classification_model(model_cls, dummy_binclass_data):
         (y_pred >= 0) & (y_pred <= 1)
     ).all(), "Expected probabilities as output"
 
+    assert y_pred.shape == y_val.shape, (
+        "Expected prediction shape to match validation labels shape"
+    )
+
 
 @pytest.mark.parametrize(
     "model_cls",

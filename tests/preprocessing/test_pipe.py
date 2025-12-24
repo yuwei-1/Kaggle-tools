@@ -16,14 +16,15 @@ CONFIG = DatasetConfig(
 
 EXPECTED_TRAIN_PROCESSED_VALUES = pd.DataFrame(
     {
-        "feature_0": [-2.0, -1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 2.0],
+        "feature_0": [-2, -1, 0, 0, 0, 0, 0, 0, 1, 2],
         "category_1": [0, 1, 0, 2, 1, 0, 3, 2, 1, 0],
     }
-)
+).astype({"category_1": "category", "feature_0": "float64"})
 
 EXPECTED_VAL_PROCESSED_VALUES = pd.DataFrame(
-    {"feature_0": [0.0, 1.0, -1.0, -2.0, 2.0, 2.0], "category_1": [1, 2, 3, 0, -2, -1]}
-)
+    {"feature_0": [0, 1, -1, -2, 2, 2], "category_1": [1, 2, 3, 0, -2, -1]},
+    # dtype={"category_1": "category", "feature_0": "float64"},
+).astype({"category_1": "category", "feature_0": "float64"})
 
 
 @pytest.fixture
@@ -57,7 +58,6 @@ def test_preprocessing_pipeline(dummy_data: pd.DataFrame):
     val_data_processed = pipeline.inference_pipe(val_data)
 
     pd.testing.assert_frame_equal(train_data_processed, EXPECTED_TRAIN_PROCESSED_VALUES)
-
     pd.testing.assert_frame_equal(val_data_processed, EXPECTED_VAL_PROCESSED_VALUES)
 
 
