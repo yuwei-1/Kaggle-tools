@@ -1,0 +1,105 @@
+# Base XGBoost Parameter Grid with Early Stopping
+base:
+  max_bin:
+    type: int
+    low: 2
+    high: 500
+
+  learning_rate:
+    type: float
+    low: 0.001
+    high: 0.3
+    log: true
+
+  max_depth:
+    type: int
+    low: 3
+    high: 50
+
+  num_boost_round:
+    type: fixed
+    value: 10000
+
+  early_stopping_rounds:
+    type: int
+    low: 10
+    high: 200
+    log: true
+
+  gamma:
+    type: float
+    low: 0
+    high: 10
+
+  min_child_weight:
+    type: float
+    low: 0.1
+    high: 100
+    log: true
+
+  subsample:
+    type: float
+    low: 0.5
+    high: 1.0
+
+  colsample_bytree:
+    type: float
+    low: 0.5
+    high: 1.0
+
+  colsample_bylevel:
+    type: float
+    low: 0.5
+    high: 1.0
+
+  colsample_bynode:
+    type: float
+    low: 0.5
+    high: 1.0
+
+  reg_alpha:
+    type: float
+    low: 0.000001
+    high: 10.0
+    log: true
+
+  reg_lambda:
+    type: float
+    low: 0.000001
+    high: 10.0
+    log: true
+
+  max_cat_threshold:
+    type: int
+    low: 1
+    high: 1000
+    log: true
+
+  sampling_method:
+    type: fixed
+    value: "uniform"
+
+  grow_policy:
+    type: categorical
+    choices: ["lossguide", "depthwise"]
+
+# GBTree variant
+gbtree:
+  inherit: base
+  booster:
+    type: fixed
+    value: "gbtree"
+
+# GBLinear variant
+gblinear:
+  inherit: base
+  booster:
+    type: fixed
+    value: "gblinear"
+
+# DART variant
+dart:
+  inherit: base
+  booster:
+    type: fixed
+    value: "dart"

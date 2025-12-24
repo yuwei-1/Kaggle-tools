@@ -1,0 +1,84 @@
+# Base CatBoost Parameter Grid
+base:
+  max_bin:
+    type: int
+    low: 2
+    high: 500
+
+  learning_rate:
+    type: float
+    low: 0.01
+    high: 0.3
+    log: true
+
+  depth:
+    type: int
+    low: 3
+    high: 16
+
+  iterations:
+    type: int
+    low: 50
+    high: 1000
+
+  bagging_temperature:
+    type: float
+    low: 1
+    high: 100
+    log: true
+
+  subsample:
+    type: float
+    low: 0.5
+    high: 1.0
+
+  colsample_bylevel:
+    type: float
+    low: 0.5
+    high: 1.0
+
+  min_data_in_leaf:
+    type: float
+    low: 1
+    high: 1000
+    log: true
+
+  l2_leaf_reg:
+    type: float
+    low: 0.000001
+    high: 10.0
+    log: true
+
+  grow_policy:
+    type: categorical
+    choices:
+      - "Lossguide"
+      - "Depthwise"
+      - "SymmetricTree"
+
+  leaf_estimation_iterations:
+    type: int
+    low: 1
+    high: 5
+
+  random_strength:
+    type: float
+    low: 1
+    high: 10
+
+  leaf_estimation_method:
+    type: categorical
+    choices:
+      - "Newton"
+      - "Gradient"
+
+  use_best_model:
+    type: fixed
+    value: true
+
+  bootstrap_type:
+    type: categorical
+    choices:
+      - "MVS"
+      - "Bayesian"
+      - "Bernoulli"
