@@ -6,7 +6,7 @@ from copy import deepcopy
 from tqdm import tqdm
 import logging
 from ktools.modelling.Interfaces.i_ktools_model import IKtoolsModel
-from ktools.hyperparameter_optimization.i_sklearn_kfold_object import (
+from ktools.hyperopt.i_sklearn_kfold_object import (
     ISklearnKFoldObject,
 )
 from ktools.utils.data_science_pipeline_settings import DataSciencePipelineSettings

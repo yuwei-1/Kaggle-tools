@@ -6,14 +6,14 @@ import optuna
 from sklearn.metrics import root_mean_squared_error
 from sklearn.model_selection import KFold, StratifiedKFold
 from ktools.fitting.cross_validation_executor import CrossValidationExecutor
-from ktools.hyperparameter_optimization.model_param_grids import (
+from ktools.hyperopt.model_param_grids import (
     BaseCatBoostParamGrid,
     BaseLGBMParamGrid,
     BaseXGBoostParamGrid,
     HGBParamGrid,
     KNNParamGrid,
 )
-from ktools.hyperparameter_optimization.optuna_hyperparameter_optimizer import (
+from ktools.hyperopt.optuna_hyperparameter_optimizer import (
     OptunaHyperparameterOptimizer,
 )
 from ktools.models import CatBoostModel

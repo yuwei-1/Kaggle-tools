@@ -6,8 +6,8 @@ from sklearn.metrics import root_mean_squared_error
 from ktools.models import CatBoostModel
 from ktools.models import LGBMModel
 from ktools.models import XGBoostModel
-from ktools.hyperparameter_optimization.model_param_grids import *
-from ktools.hyperparameter_optimization.optuna_hyperparameter_optimizer import (
+from ktools.hyperopt.model_param_grids import *
+from ktools.hyperopt.optuna_hyperparameter_optimizer import (
     OptunaHyperparameterOptimizer,
 )
 from ktools.preprocessing.basic_feature_transformers import *

@@ -2,7 +2,7 @@ from functools import reduce
 import os
 from typing import Any, Dict, List, Union
 from autogluon.tabular import TabularPredictor
-from ktools.hyperparameter_optimization.i_sklearn_kfold_object import (
+from ktools.hyperopt.i_sklearn_kfold_object import (
     ISklearnKFoldObject,
 )
 from ktools.modelling.Interfaces.i_automl_wrapper import IAutomlWrapper

@@ -2,7 +2,7 @@ import unittest
 from sklearn.metrics import root_mean_squared_error
 from sklearn.model_selection import KFold
 from ktools.fitting.cross_validation_executor import CrossValidationExecutor
-from ktools.hyperparameter_optimization.recursive_feature_elimination_executor import (
+from ktools.hyperopt.recursive_feature_elimination_executor import (
     RecursiveFeatureEliminationExecutor,
 )
 from ktools.models import LGBMModel

@@ -2,7 +2,7 @@ import os
 import h2o
 from h2o.automl import H2OAutoML
 from typing import Any, List, Union
-from ktools.hyperparameter_optimization.i_sklearn_kfold_object import (
+from ktools.hyperopt.i_sklearn_kfold_object import (
     ISklearnKFoldObject,
 )
 from ktools.modelling.Interfaces.i_automl_wrapper import IAutomlWrapper

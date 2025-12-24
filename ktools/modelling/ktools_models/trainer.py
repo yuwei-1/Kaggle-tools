@@ -2,7 +2,7 @@ from enum import Enum
 from functools import reduce
 from typing import Any, Dict, List
 from ktools.fitting.cross_validation_executor import CrossValidationExecutor
-from ktools.hyperparameter_optimization.i_sklearn_kfold_object import (
+from ktools.hyperopt.i_sklearn_kfold_object import (
     ISklearnKFoldObject,
 )
 from ktools.models import CatBoostModel

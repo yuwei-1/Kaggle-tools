@@ -1,4 +1,3 @@
-from copy import deepcopy
 import numpy as np
 import pandas as pd
 from ktools.base.model import BaseKtoolsModel
@@ -14,7 +13,7 @@ class ModelPipeline:
         config: DatasetConfig,
         preprocessor: PreprocessingPipeline = PreprocessingPipeline([]),
     ) -> None:
-        self.model = deepcopy(model)
+        self.model = model
         self.config = config
         self.preprocessor = preprocessor
 

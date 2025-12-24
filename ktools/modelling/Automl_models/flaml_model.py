@@ -4,7 +4,7 @@ from typing import Any, Callable, List, Union
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
 from ktools.fitting.cross_validation_executor import CrossValidationExecutor
-from ktools.hyperparameter_optimization.i_sklearn_kfold_object import (
+from ktools.hyperopt.i_sklearn_kfold_object import (
     ISklearnKFoldObject,
 )
 from ktools.modelling.Interfaces.i_automl_wrapper import IAutomlWrapper

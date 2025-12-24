@@ -1,5 +1,5 @@
 import optuna
-from ktools.hyperparameter_optimization.i_model_param_grid import IModelParamGrid
+from ktools.hyperopt.i_model_param_grid import IModelParamGrid
 
 
 class BaseLGBMParamGrid(IModelParamGrid):
