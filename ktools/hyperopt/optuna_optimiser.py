@@ -2,15 +2,25 @@ import optuna
 from optuna.samplers import TPESampler
 from typing import *
 from catboost import CatBoostError
-from ktools.fitting.cross_validation_executor import CrossValidationExecutor
+from ktools.config.dataset import DatasetConfig
+from ktools.fitting.cv_executor import CrossValidationExecutor
+from ktools.fitting.pipe import ModelPipeline
+from ktools.hyperopt.i_sklearn_kfold_object import ISklearnKFoldObject
+from ktools.preprocessing.pipe import PreprocessingPipeline
+from ktools.utils.loader import load_optuna_grid
 
 
 class OptunaHyperparameterOptimizer:
     def __init__(
         self,
         model,
-        executor: CrossValidationExecutor,
+        grid_yaml_path: str,
+        config: DatasetConfig,
+        evaluation_metric: Callable,
+        kfold_object: ISklearnKFoldObject,
+        preprocessor: PreprocessingPipeline,
         timeout: int = 3600,
+        model_type: str = "base",
         direction: str = "maximize",
         n_trials: int = 100,
         study_name: str = "ml_experiment",
@@ -21,7 +31,11 @@ class OptunaHyperparameterOptimizer:
     ) -> None:
         super().__init__()
         self.model = model
-        self.executor = executor
+        self._param_grid_getter = load_optuna_grid(grid_yaml_path, model_type)
+        self.config = config
+        self._evaluation_metric = evaluation_metric
+        self._kfold_object = kfold_object
+        self._preprocessor = preprocessor
         self._timeout = timeout
         self._direction = direction
         self._n_trials = n_trials
@@ -58,36 +72,30 @@ class OptunaHyperparameterOptimizer:
         )
 
         def objective(trial: optuna.Trial):
-            score, _, _, _ = self.executor.run(
+            parameters = self._param_grid_getter(trial)
+            model = self.model(**parameters)
+
+            cv_executor = CrossValidationExecutor(
+                config=self.config,
+                model_pipeline=ModelPipeline(
+                    model=model,
+                    config=self.config,
+                    preprocessor=self._preprocessor,
+                ),
+                evaluation_metric=self._evaluation_metric,
+                kfold_object=self._kfold_object,
+            )
+            score, _, _, _ = cv_executor.run(
                 *cv_args,
                 **cv_kwargs,
             )
+            return score
 
         study.optimize(
-            self._objective,
+            objective,
             n_trials=self._n_trials,
             timeout=self._timeout,
             catch=(CatBoostError,),
         )
         optimal_params = study.best_params
-        optimal_params.update(**self._fixed_model_params)
         return optimal_params
-
-    def _objective(self, trial: optuna.Trial):
-        parameters = self._param_grid_getter.get(trial)
-
-        if self._model_wrapper is not None:
-            model = self._model_wrapper.set_model(model)
-            parameters = self._model_wrapper.take_params(parameters)
-
-        model = self.model(**parameters, **self._fixed_model_params)
-
-        cv_scores, oof, model_list, _ = CrossValidationExecutor(
-            model,
-            self._metric,
-            self._kfold_object,
-            training_features=self._training_features,
-            use_test_as_valid=True,
-        ).run(self._X_train, self._y_train, **self._cross_validation_run_kwargs)
-
-        return cv_scores[0]
