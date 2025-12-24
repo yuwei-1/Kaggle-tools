@@ -74,12 +74,25 @@ base:
     high: 100
     log: true
 
-# GBDT variant
-gbdt:
+# GBDT with explicit bagging strategy
+gbdt-bagging:
   inherit: base
   boosting_type:
     type: fixed
     value: "gbdt"
+  data_sample_strategy:
+    type: fixed
+    value: "bagging"
+
+# GBDT with GOSS (Gradient-based One-Side Sampling)
+gbdt-goss:
+  inherit: base
+  boosting_type:
+    type: fixed
+    value: "gbdt"
+  data_sample_strategy:
+    type: fixed
+    value: "goss"
 
 # DART variant
 dart:

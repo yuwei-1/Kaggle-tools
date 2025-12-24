@@ -21,17 +21,6 @@ base:
     low: 50
     high: 1000
 
-  bagging_temperature:
-    type: float
-    low: 1
-    high: 100
-    log: true
-
-  subsample:
-    type: float
-    low: 0.5
-    high: 1.0
-
   colsample_bylevel:
     type: float
     low: 0.5
@@ -72,13 +61,32 @@ base:
       - "Newton"
       - "Gradient"
 
-  use_best_model:
-    type: fixed
-    value: true
-
+# MVS Bootstrap variant (default, most robust)
+mvs:
+  inherit: base
   bootstrap_type:
-    type: categorical
-    choices:
-      - "MVS"
-      - "Bayesian"
-      - "Bernoulli"
+    type: fixed
+    value: "MVS"
+
+# Bayesian Bootstrap variant
+bayesian:
+  inherit: base
+  bootstrap_type:
+    type: fixed
+    value: "Bayesian"
+  bagging_temperature:
+    type: float
+    low: 1
+    high: 100
+    log: true
+
+# Bernoulli Bootstrap variant (with subsample)
+bernoulli:
+  inherit: base
+  bootstrap_type:
+    type: fixed
+    value: "Bernoulli"
+  subsample:
+    type: float
+    low: 0.5
+    high: 1.0
