@@ -1,101 +1,102 @@
+from typing import Any, Callable, Dict, Tuple, Type
 import optuna
 from optuna.samplers import TPESampler
-from typing import *
-from catboost import CatBoostError
-from ktools.config.dataset import DatasetConfig
-from ktools.fitting.cv_executor import CrossValidationExecutor
-from ktools.fitting.pipe import ModelPipeline
-from ktools.hyperopt.i_sklearn_kfold_object import ISklearnKFoldObject
-from ktools.preprocessing.pipe import PreprocessingPipeline
-from ktools.utils.loader import load_optuna_grid
+from ktools import logger
+from ktools.utils.loader import TrialSampler, load_optuna_grid
 
 
 class OptunaHyperparameterOptimizer:
+    """
+    Hyperparameter optimizer using Optuna's TPE sampler.
+
+    Args:
+        model_type: Type of model to optimize (e.g., "catboost", "lightgbm").
+        grid_yaml_path: Path to YAML file containing parameter search space.
+        timeout: Maximum optimization time in seconds.
+        direction: Optimization direction ("maximize" or "minimize").
+        n_trials: Number of trials to run.
+        study_name: Name for the Optuna study.
+        explore_fraction: Fraction of trials for exploration phase.
+        save_study: Whether to persist the study to SQLite.
+        load_if_exists: Whether to resume an existing study with the same name.
+        catch_exceptions: Tuple of exception types to catch during optimization.
+        verbose: Whether to log progress information.
+        random_state: Random seed for reproducibility.
+    """
+
     def __init__(
         self,
-        model,
+        model_type: str,
         grid_yaml_path: str,
-        config: DatasetConfig,
-        evaluation_metric: Callable,
-        kfold_object: ISklearnKFoldObject,
-        preprocessor: PreprocessingPipeline,
+        extra_samplers: Dict[str, TrialSampler] | None = None,
         timeout: int = 3600,
-        model_type: str = "base",
         direction: str = "maximize",
         n_trials: int = 100,
         study_name: str = "ml_experiment",
         explore_fraction: float = 0.1,
         save_study: bool = False,
-        verbose=False,
-        random_state=42,
+        load_if_exists: bool = True,
+        catch_exceptions: Tuple[Type[Exception], ...] = (),
+        verbose: bool = False,
+        random_state: int = 42,
     ) -> None:
-        super().__init__()
-        self.model = model
-        self._param_grid_getter = load_optuna_grid(grid_yaml_path, model_type)
-        self.config = config
-        self._evaluation_metric = evaluation_metric
-        self._kfold_object = kfold_object
-        self._preprocessor = preprocessor
+        self._param_space_builder = load_optuna_grid(
+            grid_yaml_path, model_type, extra_samplers=extra_samplers
+        )
         self._timeout = timeout
         self._direction = direction
         self._n_trials = n_trials
         self._study_name = study_name
         self._explore_fraction = explore_fraction
         self._save_study = save_study
+        self._load_if_exists = load_if_exists
+        self._catch_exceptions = catch_exceptions
         self._verbose = verbose
         self._random_state = random_state
+        self.study: optuna.Study | None = None
 
     def optimize(
         self,
-        *cv_args,
-        **cv_kwargs,
-    ):
+        *args: Any,
+        tunable_func: Callable[..., float],
+    ) -> dict[str, Any]:
+        """
+        Run hyperparameter optimization.
+
+        Args:
+            *args: Positional arguments passed to tunable_func.
+            tunable_func: Function that takes (*args, **hyperparameters) and returns a score.
+
+        Returns:
+            Dictionary of best hyperparameters found.
+        """
         if self._verbose:
-            print("#" * 100)
-            print("Starting Optuna Optimizer")
-            print("#" * 100)
+            logger.info("Starting Optuna Optimizer")
 
         sampler = TPESampler(
             n_startup_trials=int(self._n_trials * self._explore_fraction),
             seed=self._random_state,
         )
 
-        storage_name = (
-            "sqlite:///{}.db".format(self._study_name) if self._save_study else None
-        )
-        self.study = study = optuna.create_study(
+        storage_name = f"sqlite:///{self._study_name}.db" if self._save_study else None
+
+        self.study = optuna.create_study(
             sampler=sampler,
             study_name=self._study_name,
             direction=self._direction,
             storage=storage_name,
-            load_if_exists=True,
+            load_if_exists=self._load_if_exists,
         )
 
-        def objective(trial: optuna.Trial):
-            parameters = self._param_grid_getter(trial)
-            model = self.model(**parameters)
+        def objective(trial: optuna.Trial) -> float:
+            parameters = self._param_space_builder(trial)
+            return tunable_func(*args, **parameters)
 
-            cv_executor = CrossValidationExecutor(
-                config=self.config,
-                model_pipeline=ModelPipeline(
-                    model=model,
-                    config=self.config,
-                    preprocessor=self._preprocessor,
-                ),
-                evaluation_metric=self._evaluation_metric,
-                kfold_object=self._kfold_object,
-            )
-            score, _, _, _ = cv_executor.run(
-                *cv_args,
-                **cv_kwargs,
-            )
-            return score
-
-        study.optimize(
+        self.study.optimize(
             objective,
             n_trials=self._n_trials,
             timeout=self._timeout,
-            catch=(CatBoostError,),
+            catch=self._catch_exceptions,
         )
-        optimal_params = study.best_params
-        return optimal_params
+
+        return self.study.best_params

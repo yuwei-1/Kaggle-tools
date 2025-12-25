@@ -18,8 +18,8 @@ base: &base
 
   num_boost_round:
     type: int
-    low: 50
-    high: 3000
+    low: 5
+    high: 10
 
   colsample_bytree:
     type: float

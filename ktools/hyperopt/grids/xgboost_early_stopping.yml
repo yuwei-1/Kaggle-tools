@@ -1,5 +1,5 @@
 # Base XGBoost Parameter Grid with Early Stopping
-base:
+base: &base
   max_bin:
     type: int
     low: 2
@@ -85,21 +85,21 @@ base:
 
 # GBTree variant
 gbtree:
-  inherit: base
+  <<: *base
   booster:
     type: fixed
     value: "gbtree"
 
 # GBLinear variant
 gblinear:
-  inherit: base
+  <<: *base
   booster:
     type: fixed
     value: "gblinear"
 
 # DART variant
 dart:
-  inherit: base
+  <<: *base
   booster:
     type: fixed
     value: "dart"

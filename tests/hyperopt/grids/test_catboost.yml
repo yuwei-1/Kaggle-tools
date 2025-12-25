@@ -1,4 +1,4 @@
-# Base CatBoost Parameter Grid with Early Stopping
+# Base CatBoost Parameter Grid
 base: &base
   max_bin:
     type: int
@@ -17,14 +17,9 @@ base: &base
     high: 16
 
   num_boost_round:
-    type: fixed
-    value: 10000
-
-  early_stopping_rounds:
     type: int
-    low: 10
-    high: 200
-    log: true
+    low: 5
+    high: 10
 
   colsample_bylevel:
     type: float

@@ -1,5 +1,5 @@
 # Base LightGBM Parameter Grid with Early Stopping
-base:
+base: &base
   num_leaves:
     type: int
     low: 2
@@ -25,11 +25,6 @@ base:
     low: 10
     high: 200
     log: true
-
-  subsample:
-    type: float
-    low: 0.5
-    high: 1.0
 
   colsample_bytree:
     type: float
@@ -76,34 +71,46 @@ base:
 
 # GBDT with explicit bagging strategy
 gbdt-bagging:
-  inherit: base
+  <<: *base
   boosting_type:
     type: fixed
     value: "gbdt"
   data_sample_strategy:
     type: fixed
     value: "bagging"
+  subsample:
+    type: float
+    low: 0.5
+    high: 1.0
 
 # GBDT with GOSS (Gradient-based One-Side Sampling)
 gbdt-goss:
-  inherit: base
+  <<: *base
   boosting_type:
     type: fixed
-    value: "gbdt"
+    value: "goss"
   data_sample_strategy:
     type: fixed
     value: "goss"
 
 # DART variant
 dart:
-  inherit: base
+  <<: *base
   boosting_type:
     type: fixed
     value: "dart"
+  subsample:
+    type: float
+    low: 0.5
+    high: 1.0
 
 # Random Forest variant
 rf:
-  inherit: base
+  <<: *base
   boosting_type:
     type: fixed
     value: "rf"
+  subsample:
+    type: float
+    low: 0.5
+    high: 1.0

@@ -1,0 +1,7 @@
+
+
+base:
+  x:
+    type: float
+    low: -5.0
+    high: 10.0

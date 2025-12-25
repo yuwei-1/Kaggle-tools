@@ -1,5 +1,5 @@
 # Base CatBoost Parameter Grid
-base:
+base: &base
   max_bin:
     type: int
     low: 2
@@ -16,10 +16,10 @@ base:
     low: 3
     high: 16
 
-  iterations:
+  num_boost_round:
     type: int
     low: 50
-    high: 1000
+    high: 3000
 
   colsample_bylevel:
     type: float
@@ -63,14 +63,14 @@ base:
 
 # MVS Bootstrap variant (default, most robust)
 mvs:
-  inherit: base
+  <<: *base
   bootstrap_type:
     type: fixed
     value: "MVS"
 
 # Bayesian Bootstrap variant
 bayesian:
-  inherit: base
+  <<: *base
   bootstrap_type:
     type: fixed
     value: "Bayesian"
@@ -82,7 +82,7 @@ bayesian:
 
 # Bernoulli Bootstrap variant (with subsample)
 bernoulli:
-  inherit: base
+  <<: *base
   bootstrap_type:
     type: fixed
     value: "Bernoulli"
