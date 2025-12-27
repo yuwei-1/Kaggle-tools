@@ -2,7 +2,7 @@ import unittest
 
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import StratifiedKFold
-from ktools.experimentation.robust_feature_importance_checker import (
+from ktools.feature_engineering.robust_feature_importance_checker import (
     RobustFeatureImportanceChecker,
 )
 

@@ -42,4 +42,5 @@ dependencies = [
     "pre-commit>=4.5.0",
     "pyfiglet>=1.0.4",
     "pip>=25.3",
+    "polars>=1.36.1",
 ]
