@@ -1,10 +1,12 @@
 from typing import Tuple
 import numpy as np
 import pytest
+from sklearn.metrics import roc_auc_score
 from ktools.base.model import BaseKtoolsModel
 from sklearn.datasets import make_regression, make_classification
 from sklearn.model_selection import train_test_split
 from ktools.models import LGBMModel, XGBoostModel, CatBoostModel
+from ktools.models.automl.flaml import FLAMLModel
 
 
 NUM_MULTICLASS = 5
@@ -52,6 +54,7 @@ def dummy_multiclass_data() -> Tuple[np.ndarray]:
         pytest.param(LGBMModel, id="lightgbm"),
         pytest.param(XGBoostModel, id="xgboost"),
         pytest.param(CatBoostModel, id="catboost"),
+        pytest.param(FLAMLModel, id="flaml"),
     ],
 )
 def test_regression_model(model_cls, dummy_reg_data):
@@ -72,6 +75,7 @@ def test_regression_model(model_cls, dummy_reg_data):
         pytest.param(LGBMModel, id="lightgbm"),
         pytest.param(XGBoostModel, id="xgboost"),
         pytest.param(CatBoostModel, id="catboost"),
+        pytest.param(FLAMLModel, id="flaml"),
     ],
 )
 def test_binary_classification_model(model_cls, dummy_binclass_data):
@@ -79,11 +83,12 @@ def test_binary_classification_model(model_cls, dummy_binclass_data):
     model: BaseKtoolsModel = model_cls()
     model.fit(X_train, y_train)
     y_pred = model.predict(X_val)
-    nuniques = np.unique(y_pred).shape[0]
+    # nuniques = np.unique(y_pred).shape[0]
+    score = roc_auc_score(y_val, y_pred)
 
-    assert (nuniques > 0.8 * y_val.shape[0]) and (
-        (y_pred >= 0) & (y_pred <= 1)
-    ).all(), "Expected probabilities as output"
+    assert ((y_pred >= 0) & (y_pred <= 1)).all(), "Expected probabilities as output"
+
+    assert score > 0.8, "Expected AUC score to be greater than 0.8"
 
     assert y_pred.shape == y_val.shape, (
         "Expected prediction shape to match validation labels shape"
@@ -96,6 +101,7 @@ def test_binary_classification_model(model_cls, dummy_binclass_data):
         pytest.param(LGBMModel, id="lightgbm"),
         pytest.param(XGBoostModel, id="xgboost"),
         pytest.param(CatBoostModel, id="catboost"),
+        pytest.param(FLAMLModel, id="flaml"),
     ],
 )
 def test_multiclass_classification_model(model_cls, dummy_multiclass_data):
@@ -103,11 +109,13 @@ def test_multiclass_classification_model(model_cls, dummy_multiclass_data):
     model: BaseKtoolsModel = model_cls()
     model.fit(X_train, y_train)
     y_pred = model.predict(X_val)
-    nuniques = np.unique(y_pred).shape[0]
+    # nuniques = np.unique(y_pred).shape[0]
+    score = roc_auc_score(y_val, y_pred, multi_class="ovr", average="macro")
 
-    assert (nuniques > 0.8 * y_val.shape[0]) and (
-        (y_pred >= 0) & (y_pred <= 1)
-    ).all(), "Expected probabilities as output"
+    assert ((y_pred >= 0) & (y_pred <= 1)).all(), "Expected probabilities as output"
+
+    assert score > 0.8, "Expected multiclass AUC score to be greater than 0.8"
+
     assert y_pred.shape[1] == NUM_MULTICLASS, (
         "Expected number of classes in prediction to match training labels"
     )
