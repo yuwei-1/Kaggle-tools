@@ -63,7 +63,7 @@ def test_integration_model_pipeline(diabetes_data: OUT_TYPE):
     )
 
     pipe.fit(train_data)
-    y_pred = pipe.predict(val_data)
+    y_pred = pipe.predict(val_data.drop(columns=[TARGET]))
 
     score = roc_auc_score(val_data[TARGET], y_pred)
     assert score == EXPECTED_ROC_AUC, "Expected ROC AUC does not match actual"

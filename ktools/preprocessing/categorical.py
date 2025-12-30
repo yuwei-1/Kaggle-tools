@@ -67,8 +67,8 @@ class CategoricalFrequencyEncoder(BasePreprocessor):
 
             freq_map = (
                 data[column]
-                .astype(str)
-                .fillna(self._nan_encoding)
+                # .astype(str)
+                # .fillna(self._nan_encoding)
                 .value_counts(normalize=True)
                 .to_dict()
             )
@@ -83,8 +83,8 @@ class CategoricalFrequencyEncoder(BasePreprocessor):
             freq_map = self.train_freq_mappings[column]
             copy[new_col_name] = (
                 copy[column]
-                .astype(str)
-                .fillna(self._nan_encoding)
+                # .astype(str)
+                # .fillna(self._nan_encoding)
                 .map(freq_map)
                 .fillna(self.encode_missing_value)
                 .astype(float)

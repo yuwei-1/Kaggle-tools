@@ -64,6 +64,7 @@ class FLAMLModel(BaseKtoolsModel):
         y: T,
         validation_set: Optional[Tuple[T, T]] = None,
         weights: Optional[T] = None,
+        val_weights: Optional[T] = None,
     ) -> "FLAMLModel":
         if self._task is None:
             task_id = infer_task(y)

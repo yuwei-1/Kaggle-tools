@@ -36,6 +36,7 @@ class BaseKtoolsModel(ABC):
         y: T,
         validation_set: Optional[Tuple[T, T]] = None,
         weights: Optional[T] = None,
+        val_weights: Optional[T] = None,
     ) -> "BaseKtoolsModel":
         pass
 

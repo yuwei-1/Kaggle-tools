@@ -48,6 +48,7 @@ class CatBoostModel(BaseKtoolsModel, JoblibSaveMixin):
         y: T,
         validation_set: Optional[Tuple[T, T]] = None,
         weights: Optional[T] = None,
+        val_weights: Optional[T] = None,
     ) -> "CatBoostModel":
         task_id = infer_task(y)
         self._task = task_id
@@ -66,7 +67,10 @@ class CatBoostModel(BaseKtoolsModel, JoblibSaveMixin):
         if validation_set is not None:
             X_val, y_val = validation_set
             train_params["eval_set"] = Pool(
-                data=X_val, label=y_val, cat_features=self.cat_col_names
+                data=X_val,
+                label=y_val,
+                cat_features=self.cat_col_names,
+                weight=val_weights,
             )
             train_params["early_stopping_rounds"] = self._early_stopping_rounds
 

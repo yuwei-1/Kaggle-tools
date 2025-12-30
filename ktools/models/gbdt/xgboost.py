@@ -48,6 +48,7 @@ class XGBoostModel(BaseKtoolsModel, JoblibSaveMixin):
         y: T,
         validation_set: Optional[Tuple[T, T]] = None,
         weights: Optional[T] = None,
+        val_weights: Optional[T] = None,
     ) -> "XGBoostModel":
         train_params = {}
         if "objective" not in self._xgb_param_grid:
@@ -60,8 +61,10 @@ class XGBoostModel(BaseKtoolsModel, JoblibSaveMixin):
         eval_data = [(train_data, "train")]
         if validation_set is not None:
             X_val, y_val = validation_set
-            valid_data = xgb.DMatrix(X_val, label=y_val, enable_categorical=True)
-            eval_data += [(valid_data, "eval")]
+            valid_data = xgb.DMatrix(
+                X_val, label=y_val, enable_categorical=True, weight=val_weights
+            )
+            eval_data = [(valid_data, "eval")]
             train_params["early_stopping_rounds"] = self._early_stopping_rounds
 
         train_params = {

@@ -47,6 +47,7 @@ class LGBMModel(BaseKtoolsModel, JoblibSaveMixin):
         y: T,
         validation_set: Optional[Tuple[T, T]] = None,
         weights: Optional[T] = None,
+        val_weights: Optional[T] = None,
     ) -> "LGBMModel":
         if "objective" not in self._lgb_param_grid:
             task_id = infer_task(y)
@@ -59,7 +60,9 @@ class LGBMModel(BaseKtoolsModel, JoblibSaveMixin):
         eval_names = ["train"]
         if validation_set is not None:
             X_val, y_val = validation_set
-            val_data = lgb.Dataset(X_val, label=y_val, reference=train_data)
+            val_data = lgb.Dataset(
+                X_val, label=y_val, reference=train_data, weight=val_weights
+            )
             eval_sets += [val_data]
             eval_names += ["valid"]
             self._lgb_param_grid["early_stopping_rounds"] = self.early_stopping_rounds

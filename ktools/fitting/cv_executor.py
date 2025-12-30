@@ -55,7 +55,7 @@ class CrossValidationExecutor:
             )
             pipelist.append(pipe)
 
-            y_pred = pipe.predict(val_fold)
+            y_pred = pipe.predict(val_fold.drop(columns=[self.config.target_col_name]))
             test_pred = pipe.predict(test_data)
 
             score = self._evaluation_metric(
