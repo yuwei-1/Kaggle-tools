@@ -7,6 +7,8 @@ from sklearn.datasets import make_regression, make_classification
 from sklearn.model_selection import train_test_split
 from ktools.models import LGBMModel, XGBoostModel, CatBoostModel
 from ktools.models.automl.flaml import FLAMLModel
+from ktools.models.nn.tabnet import TabNetModel
+from ktools.models.nn.tabpfn import TabPFNModel
 
 
 NUM_MULTICLASS = 5
@@ -55,6 +57,8 @@ def dummy_multiclass_data() -> Tuple[np.ndarray]:
         pytest.param(XGBoostModel, id="xgboost"),
         pytest.param(CatBoostModel, id="catboost"),
         pytest.param(FLAMLModel, id="flaml"),
+        pytest.param(TabPFNModel, id="tabpfn"),
+        pytest.param(TabNetModel, id="tabnet"),
     ],
 )
 def test_regression_model(model_cls, dummy_reg_data):
@@ -76,6 +80,8 @@ def test_regression_model(model_cls, dummy_reg_data):
         pytest.param(XGBoostModel, id="xgboost"),
         pytest.param(CatBoostModel, id="catboost"),
         pytest.param(FLAMLModel, id="flaml"),
+        pytest.param(TabPFNModel, id="tabpfn"),
+        pytest.param(TabNetModel, id="tabnet"),
     ],
 )
 def test_binary_classification_model(model_cls, dummy_binclass_data):
@@ -102,6 +108,8 @@ def test_binary_classification_model(model_cls, dummy_binclass_data):
         pytest.param(XGBoostModel, id="xgboost"),
         pytest.param(CatBoostModel, id="catboost"),
         pytest.param(FLAMLModel, id="flaml"),
+        pytest.param(TabPFNModel, id="tabpfn"),
+        pytest.param(TabNetModel, id="tabnet"),
     ],
 )
 def test_multiclass_classification_model(model_cls, dummy_multiclass_data):
@@ -114,6 +122,9 @@ def test_multiclass_classification_model(model_cls, dummy_multiclass_data):
 
     assert ((y_pred >= 0) & (y_pred <= 1)).all(), "Expected probabilities as output"
 
+    # if isinstance(model, TabNetModel):
+    #     assert score > 0.7, "Expected multiclass AUC score to be greater than 0.8"
+    # else:
     assert score > 0.8, "Expected multiclass AUC score to be greater than 0.8"
 
     assert y_pred.shape[1] == NUM_MULTICLASS, (
