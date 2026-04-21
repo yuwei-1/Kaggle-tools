@@ -16,5 +16,6 @@
           ]
         }
     },
-    "postCreateCommand": "./scripts/update-env.sh ${containerWorkspaceFolder}"
+    "postCreateCommand": "./scripts/update-env.sh ${containerWorkspaceFolder}",
+    "postAttachCommand": "echo 'export PATH=/workspaces/Kaggle-tools/.venv/bin/:$PATH' >> ~/.bashrc"
 }
