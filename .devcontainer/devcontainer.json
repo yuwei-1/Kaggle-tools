@@ -1,21 +1,24 @@
 {
-    "build": {
-        "dockerfile": "Dockerfile",
-        "context": ".."
-    },
-    "customizations": {
-        "vscode": {
-          "settings": {
-            "python.defaultInterpreterPath": "/workspaces/.venv/bin/python"
-          },
-          "extensions": [
-            "ms-python.python",
-            "hbenl.vscode-test-explorer",
-            "ms-toolsai.jupyter",
-            "github.copilot"
-          ]
-        }
-    },
-    "postCreateCommand": "./scripts/update-env.sh ${containerWorkspaceFolder}",
-    "postAttachCommand": "echo 'export PATH=/workspaces/Kaggle-tools/.venv/bin/:$PATH' >> ~/.bashrc"
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "python.defaultInterpreterPath": "/opt/venv/bin/python"
+      },
+      "extensions": [
+        "ms-python.python",
+        "hbenl.vscode-test-explorer",
+        "ms-toolsai.jupyter",
+        "github.copilot"
+      ]
+    }
+  },
+  "remoteEnv": {
+    "VIRTUAL_ENV": "/opt/venv",
+    "PATH": "/opt/venv/bin:${containerEnv:PATH}",
+    "UV_PROJECT_ENVIRONMENT": "/opt/venv"
+  }
 }

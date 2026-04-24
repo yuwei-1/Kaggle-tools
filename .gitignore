@@ -33,3 +33,7 @@ mlruns/
 .venv
 
 *ckpt
+
+
+submissions/
+docs/

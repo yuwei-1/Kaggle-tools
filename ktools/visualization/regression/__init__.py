@@ -1,1 +1,0 @@
-from ktools.visualization.regression.scatter import plot_professional_scatter

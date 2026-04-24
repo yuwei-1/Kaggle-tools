@@ -1,12 +1,12 @@
 # Kaggle-tools
-A repository for all things machine learning for use in Kaggle competitions
+A repository containing code used in Kaggle competitions.
 
 ### 🏆 Kaggle Competition Highlights
 
 **[Regression with an Insurance Dataset](https://www.kaggle.com/competitions/playground-series-s4e12)** (Playground S4E12)
 * **Rank:** 🥈 **2nd Place** / 2390 Teams
 * **Competition:** A regression challenge to predict insurance premiums using a synthetic dataset derived from deep learning models, evaluated on Root Mean Squared Logarithmic Error (RMSLE).
-* **My Solution:** I employed a OOF ensembling strategy, generating 118 out-of-fold predictions using AutoML frameworks (AutoGluon, FLAML) and custom tree-based models. These were then combined using a PyTorch TabNet model to create a non-linear meta-ensemble for the final prediction.
+* **My Solution:** I used a OOF ensembling strategy, generating 118 out-of-fold predictions using AutoML frameworks (AutoGluon, FLAML) and custom tree-based models. These were then combined using a PyTorch TabNet model to create a non-linear meta-ensemble for the final prediction.
 
 **[Loan Approval Prediction](https://www.kaggle.com/competitions/playground-series-s4e10)** (Playground S4E10)
 * **Rank:** 🥈 **20th Place** / 3858 Teams (Top 0.5%)

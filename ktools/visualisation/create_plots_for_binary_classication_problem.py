@@ -3,7 +3,7 @@ import argparse
 from pathlib import Path
 import pandas as pd
 from pandas.api.types import is_numeric_dtype, is_object_dtype
-from ktools.visualization.classification import (
+from ktools.visualisation.classification import (
     plot_professional_violin,
     plot_professional_boxplot,
     plot_cross_tabulation,
