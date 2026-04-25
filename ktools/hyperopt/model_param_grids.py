@@ -1,8 +1,7 @@
 import optuna
-from ktools.hyperopt.i_model_param_grid import IModelParamGrid
 
 
-class BaseLGBMParamGrid(IModelParamGrid):
+class BaseLGBMParamGrid:
     @staticmethod
     def get(trial: optuna.Trial):
         params = {
@@ -56,7 +55,7 @@ class LGBMRFParamGrid(BaseLGBMParamGrid):
         return params
 
 
-class BaseXGBoostParamGrid(IModelParamGrid):
+class BaseXGBoostParamGrid:
     @staticmethod
     def get(trial: optuna.Trial):
         params = {
@@ -124,7 +123,7 @@ class XGBoostGBTreeLossguide(BaseXGBoostParamGrid):
         return params
 
 
-class BaseCatBoostParamGrid(IModelParamGrid):
+class BaseCatBoostParamGrid:
     @staticmethod
     def get(trial: optuna.Trial):
         params = {
@@ -160,7 +159,7 @@ class BaseCatBoostParamGrid(IModelParamGrid):
         return params
 
 
-class KNNParamGrid(IModelParamGrid):
+class KNNParamGrid:
     @staticmethod
     def get(trial: optuna.Trial):
         params = {
@@ -174,7 +173,7 @@ class KNNParamGrid(IModelParamGrid):
         return params
 
 
-class SVMParamGrid(IModelParamGrid):
+class SVMParamGrid:
     @staticmethod
     def get(trial: optuna.Trial):
         params = {
@@ -196,7 +195,7 @@ class SVMParamGrid(IModelParamGrid):
         return params
 
 
-class HGBParamGrid(IModelParamGrid):
+class HGBParamGrid:
     @staticmethod
     def get(trial: optuna.Trial):
         params = {
@@ -225,7 +224,7 @@ class HGBParamGrid(IModelParamGrid):
         return params
 
 
-class YDFParamGrid(IModelParamGrid):
+class YDFParamGrid:
     @staticmethod
     def get(trial: optuna.Trial):
         params = {

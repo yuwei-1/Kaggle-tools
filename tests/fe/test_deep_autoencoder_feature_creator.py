@@ -4,7 +4,7 @@ from sys import stdout
 import numpy as np
 import pandas as pd
 from sklearn.datasets import make_regression
-from ktools.feature_engineering.deep_feature_creator import DeepFeatureCreator
+from ktools.fe.deep_feature_creator import DeepFeatureCreator
 
 
 logger = logging.getLogger(__name__)

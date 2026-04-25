@@ -1,7 +1,7 @@
 import itertools
 from typing import List, Tuple
 import pandas as pd
-from ktools.feature_engineering.interfaces.i_feature_creator import IFeatureCreator
+from ktools.fe.interfaces.i_feature_creator import IFeatureCreator
 
 
 class FrequencyEncodingCreator(IFeatureCreator):

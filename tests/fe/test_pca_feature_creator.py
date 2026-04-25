@@ -1,7 +1,7 @@
 import unittest
 import pandas as pd
 from sklearn.datasets import make_regression
-from ktools.feature_engineering.pca_feature_creator import PCAFeatureCreator
+from ktools.fe.pca_feature_creator import PCAFeatureCreator
 
 
 class TestPCAFeatureCreator(unittest.TestCase):
