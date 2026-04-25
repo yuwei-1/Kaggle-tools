@@ -1,3 +1,5 @@
+![alt text](docs/ktools.png)
+
 # Kaggle-tools
 A repository containing code used in Kaggle competitions.
 

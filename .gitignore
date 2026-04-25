@@ -18,7 +18,6 @@ __pycache__
 *.pkl
 
 # dist files
-/ktools.egg-info/
 /build
 /dist
 **/lightning_logs/*
@@ -36,4 +35,7 @@ mlruns/
 
 
 submissions/
-docs/
+
+
+*.egg-info
+kaggle-cli/

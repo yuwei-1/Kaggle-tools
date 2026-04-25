@@ -45,3 +45,12 @@ dependencies = [
     "polars>=1.36.1",
     "tabpfn>=6.2.0",
 ]
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["ktools*"]
+exclude = ["tests*", "kaggle_ktools_dataset*", "xlearn*", "scripts*"]
