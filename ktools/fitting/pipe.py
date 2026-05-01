@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from ktools.base.model import BaseKtoolsModel
-from typing import Optional, Union
+from typing import Any, Optional, Union
 from ktools.config.dataset import DatasetConfig
 from ktools.preprocessing.pipe import PreprocessingPipeline
 
@@ -23,6 +23,7 @@ class ModelPipeline:
         validation_data: Optional[pd.DataFrame] = None,
         weights: Optional[Union[pd.Series, np.ndarray]] = None,
         val_weights: Optional[Union[pd.Series, np.ndarray]] = None,
+        **fit_kwargs: Any,
     ) -> "ModelPipeline":
         train_data = self.preprocessor.train_pipe(train_data)
         X_train = train_data.drop(columns=[self.config.target_col_name])
@@ -40,6 +41,7 @@ class ModelPipeline:
             validation_set=validation_data,
             weights=weights,
             val_weights=val_weights,
+            **fit_kwargs,
         )
         return self
 

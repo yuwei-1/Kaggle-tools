@@ -130,3 +130,20 @@ def test_multiclass_classification_model(model_cls, dummy_multiclass_data):
     assert y_pred.shape[1] == NUM_MULTICLASS, (
         "Expected number of classes in prediction to match training labels"
     )
+
+
+@pytest.mark.parametrize(
+    "task,fixture_name",
+    [
+        pytest.param("binary", "dummy_binclass_data", id="binary"),
+        pytest.param("multiclass", "dummy_multiclass_data", id="multiclass"),
+    ],
+)
+def test_tabnet_fit_with_validation_set(task, fixture_name, request):
+    """Regression test: validation_set y must not be 2-D when passed to TabNet."""
+    X_train, X_val, y_train, y_val = request.getfixturevalue(fixture_name)
+    model = TabNetModel()
+    # Should not raise ValueError about 1-dimensional data
+    model.fit(X_train, y_train, validation_set=(X_val, y_val))
+    y_pred = model.predict(X_val)
+    assert y_pred.ndim == (1 if task == "binary" else 2)

@@ -48,6 +48,7 @@ class LGBMModel(BaseKtoolsModel, JoblibSaveMixin):
         validation_set: Optional[Tuple[T, T]] = None,
         weights: Optional[T] = None,
         val_weights: Optional[T] = None,
+        **train_kwargs: Any,
     ) -> "LGBMModel":
         if "objective" not in self._lgb_param_grid:
             task_id = infer_task(y)
@@ -76,7 +77,7 @@ class LGBMModel(BaseKtoolsModel, JoblibSaveMixin):
             "callbacks": self._callbacks,
         }
 
-        self.model = lgb.train(**train_params)
+        self.model = lgb.train(**train_params, **train_kwargs)
         self._fitted = True
         return self
 
