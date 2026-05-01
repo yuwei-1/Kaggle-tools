@@ -7,6 +7,7 @@ from pytorch_tabnet.tab_model import TabNetClassifier, TabNetRegressor
 from ktools.base.model import BaseKtoolsModel
 from ktools.base.joblib_mixin import JoblibSaveMixin
 from ktools.utils.helpers import infer_task
+from sklearn.preprocessing import OrdinalEncoder
 
 
 T = Union[np.ndarray, pd.DataFrame]
@@ -60,6 +61,8 @@ class TabNetModel(BaseKtoolsModel, JoblibSaveMixin):
         # TabNet model parameters
         self._tabnet_params = tabnet_params
         self._task: Optional[str] = None
+        self._encoded = False
+        self._encoder: Optional[OrdinalEncoder] = None
 
     def _get_model_kwargs(self) -> dict:
         """Build kwargs dict for TabNet model initialization."""
@@ -73,42 +76,12 @@ class TabNetModel(BaseKtoolsModel, JoblibSaveMixin):
     def _convert_to_numpy(self, data: T) -> np.ndarray:
         """Convert DataFrame or array to numpy array."""
         if isinstance(data, pd.DataFrame):
-            return data.values
+            return data.to_numpy(dtype=np.float32)
         elif isinstance(data, pd.Series):
-            return data.values.reshape(-1, 1)
+            return data.to_numpy(dtype=np.float32).reshape(-1, 1)
         elif len(data.shape) == 1:
             return data.reshape(-1, 1)
         return data
-
-    def _infer_categorical_features(self, X: T) -> None:
-        """
-        Infer categorical feature indices and dimensions from the data.
-
-        Categorical features are identified as:
-        - Columns with dtype 'category', 'object', 'bool'
-        - Integer columns with low cardinality (< 20 unique values)
-        """
-        if isinstance(X, np.ndarray):
-            X = pd.DataFrame(X)
-
-        self._cat_idxs = []
-        self._cat_dims = []
-        self._cat_emb_dim = []
-
-        for idx, col in enumerate(X.columns):
-            dtype = X[col].dtype
-            n_unique = X[col].nunique()
-
-            is_categorical = (
-                dtype.name == "category" or dtype == object or dtype == bool
-            )
-
-            if is_categorical:
-                self._cat_idxs.append(idx)
-                # Add 1 to handle potential unseen categories
-                cardinality = n_unique + 1
-                self._cat_dims.append(cardinality)
-                self._cat_emb_dim.append(default_emb_dim_fn(cardinality))
 
     def fit(
         self,
@@ -132,7 +105,26 @@ class TabNetModel(BaseKtoolsModel, JoblibSaveMixin):
             self: The fitted model.
         """
         # Infer categorical features from data
-        self._infer_categorical_features(X)
+        if isinstance(X, np.ndarray):
+            X = pd.DataFrame(X)
+
+        assumed_categoricals = X.select_dtypes(include=["category", "object", "bool"])
+        self._cat_idxs = [
+            X.columns.get_loc(col) for col in assumed_categoricals.columns
+        ]
+
+        if not assumed_categoricals.empty:
+            self._encoder = OrdinalEncoder(
+                handle_unknown="use_encoded_value", unknown_value=-1
+            )
+            X = X.copy()
+            X.iloc[:, self._cat_idxs] = self._encoder.fit_transform(
+                assumed_categoricals.fillna("__missing__").astype(str)
+            ).astype("int64")
+
+            self._cat_dims = X.iloc[:, self._cat_idxs].nunique().tolist()
+            self._cat_emb_dim = [default_emb_dim_fn(dim) for dim in self._cat_dims]
+            self._encoded = True
 
         self._task = infer_task(y)
         model_kwargs = self._get_model_kwargs()
@@ -172,15 +164,24 @@ class TabNetModel(BaseKtoolsModel, JoblibSaveMixin):
         # Add validation set if provided
         if validation_set is not None:
             X_val, y_val = validation_set
+            if isinstance(X_val, np.ndarray):
+                X_val = pd.DataFrame(X_val)
+            if self._encoded:
+                X_val = X_val.copy()
+                X_val.iloc[:, self._cat_idxs] = self._encoder.transform(
+                    X_val.iloc[:, self._cat_idxs].fillna("__missing__").astype(str)
+                ).astype("int64")
             X_val = self._convert_to_numpy(X_val)
             y_val = self._convert_to_numpy(y_val)
+            if self._task != "regression":
+                y_val = y_val.squeeze()
             fit_kwargs["eval_set"] = [(X_val, y_val)]
             fit_kwargs["eval_name"] = ["val"]
 
         # Add sample weights if provided
-        if weights is not None:
-            fit_kwargs["weights"] = 1  # Use sample weights
-            # TabNet expects weights as a separate parameter during fit
+        # if weights is not None:
+        #     fit_kwargs["weights"] = weights  # Use sample weights
+        # TabNet expects weights as a separate parameter during fit
 
         self.model.fit(**fit_kwargs)
         self._fitted = True
@@ -198,6 +199,15 @@ class TabNetModel(BaseKtoolsModel, JoblibSaveMixin):
         """
         if self.model is None:
             raise ValueError("Model is not fitted yet. Please call 'fit' first.")
+
+        if isinstance(X, np.ndarray):
+            X = pd.DataFrame(X)
+
+        if self._encoded:
+            X = X.copy()
+            X.iloc[:, self._cat_idxs] = self._encoder.transform(
+                X.iloc[:, self._cat_idxs].fillna("__missing__").astype(str)
+            ).astype("int64")
 
         X = self._convert_to_numpy(X)
 
